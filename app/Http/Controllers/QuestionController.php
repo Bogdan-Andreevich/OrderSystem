@@ -70,7 +70,7 @@ class QuestionController extends Controller
 //        return response()->json($question->load('answers'));
 //    }
 
-    public function update(Request $request, Question $question)
+    public function update(Request $request, $id)
     {
         $validated = $request->validate([
             'question' => 'required|string',
@@ -81,15 +81,16 @@ class QuestionController extends Controller
             'parent_id' => 'nullable|integer|exists:questions,id'
         ]);
 
+        $question = Question::findOrFail($id);
         $question->update($validated);
-
         return response()->json($question);
     }
 
-    public function destroy(Question $question)
+// destroy
+    public function destroy($id)
     {
+        $question = Question::findOrFail($id);
         $question->delete();
-
-        return response()->json('Question deleted successfully');
+        return response()->json($question);
     }
 }
