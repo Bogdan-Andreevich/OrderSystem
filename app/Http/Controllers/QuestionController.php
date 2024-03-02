@@ -14,6 +14,13 @@ class QuestionController extends Controller
         return response()->json($questions);
     }
 
+    public function getQuestionById($id)
+    {
+        $questions = Question::findOrFail($id)->load('answers');
+        return response()->json($questions);
+
+    }
+
     public function store(Request $request)
     {
 

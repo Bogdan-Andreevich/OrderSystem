@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\CategoriesController;
+use App\Http\Controllers\PriceController;
 
 
 /*
@@ -24,8 +26,17 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::get('/questions', [QuestionController::class, 'create']);
 Route::post('/questions', [QuestionController::class, 'store']);
 Route::put('/questions/{id}', [QuestionController::class, 'update']);
+Route::get('/questions/{id}', [QuestionController::class, 'getQuestionById']);
 Route::delete('/questions/{id}', [QuestionController::class, 'destroy']);
 Route::post('/questions/{id}/answers', [QuestionController::class, 'answers']);
+
+Route::get('/categories', [CategoriesController::class, 'create']);
+Route::post('/categories', [CategoriesController::class, 'store']);
+Route::delete('/categories/{id}', [CategoriesController::class, 'destroy']);
+
+Route::get('/prices', [PriceController::class, 'create']);
+Route::post('/prices', [PriceController::class, 'store']);
+Route::delete('/prices/{id}', [PriceController::class, 'destroy']);
 
 
 
