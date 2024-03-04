@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\CategoriesController;
 use App\Http\Controllers\PriceController;
+use App\Http\Controllers\PriceRowsController;
 
 
 /*
@@ -37,6 +38,10 @@ Route::delete('/categories/{id}', [CategoriesController::class, 'destroy']);
 Route::get('/prices', [PriceController::class, 'create']);
 Route::post('/prices', [PriceController::class, 'store']);
 Route::delete('/prices/{id}', [PriceController::class, 'destroy']);
+
+Route::get('/price/rows', [PriceRowsController::class, 'create']);
+Route::post('/price/rows', [PriceRowsController::class, 'store']);
+Route::put('/price/rows/{id}', [PriceRowsController::class, 'update']);
 
 
 
