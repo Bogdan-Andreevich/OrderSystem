@@ -37,6 +37,7 @@ Route::delete('/categories/{id}', [CategoriesController::class, 'destroy']);
 
 Route::get('/prices', [PriceController::class, 'create']);
 Route::post('/prices', [PriceController::class, 'store']);
+Route::put('/prices/{id}', [PriceController::class, 'update']);
 Route::delete('/prices/{id}', [PriceController::class, 'destroy']);
 
 Route::get('/price/rows', [PriceRowsController::class, 'create']);

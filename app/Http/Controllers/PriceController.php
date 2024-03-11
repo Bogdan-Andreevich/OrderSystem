@@ -4,53 +4,84 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Price;
+use Illuminate\Support\Facades\Validator;
+use function Symfony\Component\Translation\t;
 
 class PriceController extends Controller
 {
     public function create()
     {
-        $prices = Price::all();
-        return response()->json($prices);
+        try {
+            $prices = Price::all();
+            if ($prices->count() === 0) {
+                return response()->json(['message' => 'Масив питань порожній']);
+            }
+            return response()->json($prices);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Ціни не знайдено'], 404);
+        }
+
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'categoryId' => 'required|integer',
             'name' => 'required|string',
             'nameRu' => 'required|string',
             'unit' => 'required|string',
             'price' => 'required|string',
             'techDocumentations' => 'required|array',
-//            'techDocumentations.*' => 'integer|distinct',
         ]);
-        $validated['techDocumentations'] = json_encode($validated['techDocumentations']);
-        $prices = Price::create($validated);
 
-        return response()->json($prices);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
+        try {
+            $validatedData = $validator->validated();
+            $validatedData['techDocumentations'] = json_encode($validatedData['techDocumentations']);
+            $prices = Price::create($validatedData);
+            return response()->json($prices);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Помилка створення ціни'], 500);
+        }
     }
 
-//    public function update(Request $request, $id)
-//    {
-//        $validated = $request->validate([
-//            'categoryId' => 'required|integer',
-//            'name' => 'required|string',
-//            'nameRu' => 'required|string',
-//            'unit' => 'required|string',
-//            'price' => 'required|string',
-//            'techDocumentations' => 'required|array',
-////            'techDocumentations.*' => 'integer|distinct',
-//        ]);
-//        $validated['techDocumentations'] = json_encode($validated['techDocumentations']);
-//        $prices = Price::findOrFail($id);
-//        $prices->update($validated);
-//    }
+    public function update(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'categoryId' => 'required|integer',
+            'name' => 'required|string',
+            'nameRu' => 'required|string',
+            'unit' => 'required|string',
+            'price' => 'required|string',
+            'techDocumentations' => 'required|array',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        try {
+            $validatedData = $validator->validated();
+            $validatedData['techDocumentations'] = json_encode($validatedData['techDocumentations']);
+            $prices = Price::findOrFail($id);
+            $prices->update($validatedData);
+            return response()->json($prices);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Ціну на оновлення не знайдено'], 500);
+        }
+    }
 
     public function destroy($id)
     {
-        $prices = Price::findOrFail($id);
-        $prices->delete();
-        return response()->json($prices);
+        try {
+            $prices = Price::findOrFail($id);
+            $prices->delete();
+            return response()->json(['message' => 'Ціна видалена']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Ціну не знайдено'], 500);
+        }
     }
 }
