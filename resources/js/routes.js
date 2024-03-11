@@ -3,6 +3,9 @@ import { createRouter, createWebHistory } from "vue-router";
 
 
 
+import PriceOfOrder from './components/prices/TypeOfPrices.vue';
+import TypeOfOrder from './components/order/TypeOfOrder.vue';
+import PriceIndex from './components/prices/Index.vue';
 import OrderIndex from './components/order/Index.vue';
 
 import Order from './components/order/order.vue';
@@ -21,6 +24,30 @@ export const routes = [
         name: 'home',
         path: '/',
         component: Create,
+    },
+
+    {
+        // UserProfile will be rendered inside User's <router-view>
+        // when /user/:id/profile is matched
+        name: 'prices',
+        path: '/prices',
+        component: PriceIndex,
+    },
+
+    {
+        // UserProfile will be rendered inside User's <router-view>
+        // when /user/:id/profile is matched
+        name: 'typeOfOrder',
+        path: '/typeoforder',
+        component: TypeOfOrder,
+    },
+
+    {
+        // UserProfile will be rendered inside User's <router-view>
+        // when /user/:id/profile is matched
+        name: 'priceOfOrder',
+        path: '/priceoforder',
+        component: PriceOfOrder,
     },
 
 
@@ -45,13 +72,13 @@ export const routes = [
                 component: Create,
             },
 
-            /*{
-                // UserPosts will be rendered inside User's <router-view>
-                // when /user/:id/posts is matched
-                name: 'order/edit',
-                path: 'edit/:id',
-                component: OrderCreateOrEdit,
-            },*/
+            // {
+            //     // UserPosts will be rendered inside User's <router-view>
+            //     // when /user/:id/posts is matched
+            //     name: 'order/edit',
+            //     path: 'edit/:id',
+            //     component: OrderCreateOrEdit,
+            // },
 
         ]
     },

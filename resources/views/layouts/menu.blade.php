@@ -23,6 +23,25 @@
 </li>
 
 
+<li class="nav-item">
+    <a href="{{ route('home').'/prices' }}" class="nav-link {{ (\Request::getPathInfo() == '/account/prices')? 'active' : '' }}">
+        <p>Прайс по тз </p>
+    </a>
+</li>
+
+<li class="nav-item">
+    <a href="{{ route('home').'/typeoforder' }}" class="nav-link {{ (\Request::getPathInfo() == '/account/typeoforder')? 'active' : '' }}">
+        <p>Типи замовлень </p>
+    </a>
+</li>
+
+<li class="nav-item">
+    <a href="{{ route('home').'/priceoforder' }}" class="nav-link {{ (\Request::getPathInfo() == '/account/priceoforder')? 'active' : '' }}">
+        <p>Прайс</p>
+    </a>
+</li>
+
+
 
 @if (Auth::user()->role == 'admin')
 

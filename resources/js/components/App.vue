@@ -6,8 +6,6 @@
 
                 <div class="col-sm-6" style="font-size: 20px;font-weight: 500;">
 
-                    <!--<h1>Гарантійні талони</h1>-->
-
                     <ol v-if="this.$route.name=='home'" class="breadcrumb float-sm-left">
                         <li class="breadcrumb-item active">Головна</li>
                     </ol>
