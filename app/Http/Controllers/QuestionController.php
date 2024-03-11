@@ -4,82 +4,100 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Question;
+use Illuminate\Support\Facades\Validator;
 
 class QuestionController extends Controller
 {
-    public function create($parentId = null)
+    public function create()
     {
-        $questions = Question::whereNull('parent_id')->with('answers')->get();
-
-        return response()->json($questions);
+        try {
+            $questions = Question::whereNull('parent_id')->with('answers')->get();
+            if ($questions->count() === 0) {
+                return response()->json(['message' => 'Масив питань порожній']);
+            }
+            return response()->json($questions);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Питаннь не знайдено'], 404);
+        }
     }
 
     public function getQuestionById($id)
     {
-        $questions = Question::findOrFail($id)->load('answers');
-        return response()->json($questions);
+        try {
+            $questions = Question::findOrFail($id)->load('answers');
+            return response()->json($questions);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Питання не знайдено'], 404);
+        }
+
 
     }
 
     public function store(Request $request)
     {
-
-//        $validator = Validator::make($request->all(),[
-//            'question' => 'required|string',
-//            'question_description' => 'nullable|string',
-//            'is_add_description' => 'nullable|boolean',
-//            'comment' => 'nullable|string',
-//            'price' => 'nullable|integer',
-//            'parent_id' => 'nullable|integer|exists:questions,id'
-//        ]);
-//
-//        if($validator->fails()) {
-//            return redirect()->back()->withInput()->withErrors(['text' => 'Вы ввели неправильные данные']);
-//        }
-
-
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'question' => 'required|string',
             'question_description' => 'nullable|string',
             'is_add_description' => 'nullable|boolean',
             'comment' => 'nullable|string',
             'price' => 'nullable|integer',
-            'parent_id' => 'nullable|integer|exists:questions,id'
+            'parent_id' => 'nullable|prohibited'
         ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        $validatedData = $validator->validated();
+        $validatedData['parent_id'] = null;
+        try {
+            $question = Question::create($validatedData);
+            return response()->json($question);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => "Помилка створення питання: " . $e->getMessage()
+            ], 500);
+        }
 
-        $question = Question::create($validated);
-
-        return response()->json($question);
     }
 
     public function answers(Request $request)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'question' => 'required|string',
             'question_description' => 'nullable|string',
             'is_add_description' => 'nullable|boolean',
             'comment' => 'nullable|string',
             'price' => 'nullable|integer',
-            'parent_id' => 'nullable|integer|exists:questions,id'
+            'parent_id' => 'required|integer|exists:questions,id'
         ]);
 
-        $question = Question::findOrFail($validated['parent_id']);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        $reply = new Question($validated);
-        $reply->parent_id = $question->id;
-        $reply->save();
+        try {
+            $question = Question::findOrFail($request->parent_id);
 
-        return response()->json($reply);
+            $reply = Question::create([
+                'question' => $request->question,
+                'question_description' => $request->question_description,
+                'is_add_description' => $request->is_add_description,
+                'comment' => $request->comment,
+                'price' => $request->price,
+                'parent_id' => $question->id
+            ]);
+
+            return response()->json($reply);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Головне питання не знайдено'], 404);
+        }
     }
-
-//    public function show(Question $question)
-//    {
-//        return response()->json($question->load('answers'));
-//    }
 
     public function update(Request $request, $id)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'question' => 'required|string',
             'question_description' => 'nullable|string',
             'is_add_description' => 'nullable|boolean',
@@ -88,16 +106,33 @@ class QuestionController extends Controller
             'parent_id' => 'nullable|integer|exists:questions,id'
         ]);
 
-        $question = Question::findOrFail($id);
-        $question->update($validated);
-        return response()->json($question);
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        try {
+            $question = Question::findOrFail($id);
+            $question->update($validator->validated());
+            return response()->json($question);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => "Помилка оновлення питання: " . $e->getMessage()
+            ], 500);
+        }
     }
 
-// destroy
     public function destroy($id)
     {
-        $question = Question::findOrFail($id);
-        $question->delete();
-        return response()->json($question);
+        try {
+            $question = Question::findOrFail($id);
+            $question->delete();
+            return response()->json(['message' => 'Питання видалено']);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => "Питання не знайдено: " . $e->getMessage()
+            ], 500);
+        }
+
     }
 }
