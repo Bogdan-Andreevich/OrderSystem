@@ -11,10 +11,8 @@ class PriceRows extends Model
 
 
     protected $fillable = [
-        'title',
         'categories',
-        'categoryId',
-
+        'priceId',
     ];
 }
 

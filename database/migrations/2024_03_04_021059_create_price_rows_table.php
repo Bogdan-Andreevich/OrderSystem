@@ -15,9 +15,8 @@ class CreatePriceRowsTable extends Migration
     {
         Schema::create('price_rows', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
+            $table->string('priceId');
             $table->json('categories');
-            $table->unsignedInteger('categoryId');
             $table->timestamps();
         });
     }
