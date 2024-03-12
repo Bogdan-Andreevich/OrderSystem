@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Price;
+use App\Models\PriceRows;
 use Illuminate\Support\Facades\Validator;
 use function Symfony\Component\Translation\t;
 
@@ -76,12 +77,21 @@ class PriceController extends Controller
     public function findByCategoryId(int $categoryId)
     {
         $prices = Price::where('categoryId', $categoryId)->get();
+        $pricesRows = PriceRows::all();
+
+        foreach ($pricesRows as &$question) {
+            $question->categories = json_encode($question->categories);
+        }
+
+        foreach ($prices as &$question) {
+            $question->techDocumentations = PriceRows::where('categories->id', $question->id)->get();
+        }
 
         if ($prices->isEmpty()) {
             return null; // Or any other handling you prefer for 'not found' cases
         }
 
-        return $prices;
+        return [$prices, $pricesRows];
     }
 
 

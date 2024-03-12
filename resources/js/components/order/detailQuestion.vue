@@ -50,6 +50,14 @@ export default {
         };
     },
     methods: {
+        handleClearData(){
+            this.selectedUnitId = null;
+            this.selectedUnitCopyId = null;
+            this.unitTypes = [];
+            this.sections = [];
+            this.sectionsCopy = [];
+            this.priceList = [];
+        },
         async fetchPriceList() {
             try {
                 const response = await this.axios.get(`http://localhost/api/price/rows/${this.selectedUnitId}`);
@@ -71,6 +79,7 @@ export default {
                 } else {
                     this.updateQuestionData(question);
                 }
+                this.handleClearData()
             }
         },
 

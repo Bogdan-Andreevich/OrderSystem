@@ -70,11 +70,20 @@ export default {
 
     name: 'PricesComponent',
     mounted() {
-        this.fetchDataTypeOfOrders();
+        this.fetchDataTypeOfOrders().then(() => {
+            const optionIdData = sessionStorage.getItem("optionId")
+
+            if (optionIdData) {
+                this.changeSelection(+optionIdData)
+                sessionStorage.removeItem("optionId")
+            }
+        })
+
     },
     watch: {
         selectedOption(newOptionId) {
             this.optionId = newOptionId;
+            console.log(this.options);
             const categoryId = this.options.find((item) => item.id === newOptionId).categoryId
             this.fetchPriceData(categoryId);
             this.fetchActions(newOptionId);
@@ -104,6 +113,9 @@ export default {
         };
     },
     methods: {
+        changeSelection(newOptionId) {
+            this.selectedOption = newOptionId;
+        },
         async copyCategories() {
             try {
                 const response = await this.axios.get(`http://localhost/api/price/rows/${this.selectedOptionCopy}`);
@@ -127,7 +139,7 @@ export default {
                 const httpMethod = isExistCategory ? 'put' : 'post';
                 const url = isExistCategory ? `http://localhost/api/price/rows/${this.optionId}` : 'http://localhost/api/price/rows';
 
-                const response = await this.axios[httpMethod](url, {
+                await this.axios[httpMethod](url, {
                     priceId: this.optionId,
                     categories: this.actions.map((item) => item.id)
                 });

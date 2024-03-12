@@ -36,7 +36,7 @@
                         <input type="text" v-model="order.nameRu" class="form-control form-control-sm">
                       </td>
                       <td>
-                        <button></button>
+                        <button @click="handleNavigate(order.categoryId, order.id)" class="btn btn-sm btn-primary">ТЗ</button>
                       </td>
                       <td>
                         <select v-model="order.categoryId" class="form-control form-control-sm">
@@ -81,6 +81,11 @@ export default {
         // this.fetchSearch();
     },
     methods: {
+        handleNavigate(categoryId, id){
+          sessionStorage.setItem("optionId",id);
+          sessionStorage.setItem("categoryId",categoryId);
+          this.$router.replace('prices');
+      },
         async saveChanges() {
             try {
                 for (const item of this.orders) {
