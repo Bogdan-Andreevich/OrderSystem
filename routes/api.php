@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\CategoriesController;
 use App\Http\Controllers\PriceController;
+use App\Http\Controllers\TypeOfOrdersController;
 use App\Http\Controllers\PriceRowsController;
 
 
@@ -36,13 +37,20 @@ Route::post('/categories', [CategoriesController::class, 'store']);
 Route::delete('/categories/{id}', [CategoriesController::class, 'destroy']);
 
 Route::get('/prices', [PriceController::class, 'create']);
+Route::get('/prices/{categoryId}', [PriceController::class, 'findByCategoryId']);
 Route::post('/prices', [PriceController::class, 'store']);
 Route::put('/prices/{id}', [PriceController::class, 'update']);
 Route::delete('/prices/{id}', [PriceController::class, 'destroy']);
 
+Route::get('/typeoforders', [TypeOfOrdersController::class, 'index']);
+Route::post('/typeoforders', [TypeOfOrdersController::class, 'store']);
+Route::put('/typeoforders/{id}', [TypeOfOrdersController::class, 'update']);
+Route::delete('/typeoforders/{id}', [TypeOfOrdersController::class, 'destroy']);
+
 Route::get('/price/rows', [PriceRowsController::class, 'create']);
 Route::post('/price/rows', [PriceRowsController::class, 'store']);
 Route::put('/price/rows/{id}', [PriceRowsController::class, 'update']);
+Route::get('/price/rows/{priceId}', [PriceRowsController::class, 'getById']);
 
 
 

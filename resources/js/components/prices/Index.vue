@@ -2,43 +2,34 @@
     <div class="workflow">
         <section class="top-selector">
             <select class="form-control top-select top-select-1" v-model="selectedOption">
-                <option v-for="option in options" :value="option.value">{{ option.text }}</option>
+                <option v-for="option in options" :value="option.id">{{ option.name }}</option>
             </select>
 
             <div class="input-group top-selector-section">
-                <select class="form-control p-selector top-select top-select-2" v-model="selectedOption">
-                    <option v-for="option in options" :value="option.value">{{ option.text }}</option>
+                <select class="form-control p-selector top-select top-select-2" v-model="selectedOptionCopy">
+                    <option v-for="option in options" :value="option.id">{{ option.name }}</option>
                 </select>
 
                 <span class="input-group-append">
-                    <button class="btn btn-info btn-flat">Копіювати прайс з іншого ТЗ</button>
+                    <button class="btn btn-info btn-flat" @click="copyCategories">Копіювати прайс з іншого ТЗ</button>
                 </span>
             </div>
         </section>
 
 
-        <div class="middle-selector form-group"> <button class="btn btn-default">+</button>
+        <div class="middle-selector form-group"> <button class="btn btn-default" @click="addOptionsToActions">+</button>
 
 
-            <Dropdown v-model="selectedOption" :options="options" filter optionLabel="text" placeholder="Виберіть опцію"
-                class="w-full md:w-14rem select2" style="width:100%;">
-                <template #value="slotProps">
-                    <div v-if="slotProps.value" class="flex align-items-center">
-                        <div>{{ slotProps.value.text }}</div>
-                    </div>
-                    <span v-else>
-                        {{ slotProps.placeholder }}
-                    </span>
-                </template>
+            <MultiSelect v-model="selectedOptions" :options="prices" optionLabel="name" optionValue="id" filter
+                placeholder="Виберіть опції" class="w-full md:w-14rem select2" style="width:100%;">
 
                 <template #option="slotProps">
                     <div class="flex align-items-center">
-                        <div>{{ slotProps.option.text }}</div>
+                        <div>{{ slotProps.option.name }} - {{ slotProps.option.price }} грн</div>
                     </div>
                 </template>
-            </Dropdown>
 
-
+            </MultiSelect>
 
             <div class="checkbox"> <input type="checkbox" id="allCategories" v-model="allCategories">
                 <label for="allCategories">Всі категорії</label>
@@ -53,7 +44,8 @@
                     <template #item="{ element, index }">
                         <tr class="custom-list">
                             <td>{{ element.name }}</td>
-                            <td>{{ element.amount }}</td>
+                            <td>{{ element.price }}</td>
+                            <td>{{ element.unit }}</td>
                             <td>
                                 <button class="btn btn-danger" @click="deleteAction(index)">Видалити</button>
                             </td>
@@ -62,7 +54,7 @@
                 </draggable>
             </table>
 
-            <button class="btn btn-success">Зберегти</button>
+            <button class="btn btn-success" @click="saveData">Зберегти</button>
         </div>
 
     </div>
@@ -78,23 +70,128 @@ export default {
 
     name: 'PricesComponent',
     mounted() {
+        this.fetchDataTypeOfOrders();
     },
+    watch: {
+        selectedOption(newOptionId) {
+            this.optionId = newOptionId;
+            const categoryId = this.options.find((item) => item.id === newOptionId).categoryId
+            this.fetchPriceData(categoryId);
+            this.fetchActions(newOptionId);
+        },
+        allCategories(isChecked) {
+            if (isChecked) {
+                this.fetchAllPrices();
+            } else {
+                this.fetchPriceData(this.optionId)
+            }
+        }
+
+    },
+
     data() {
         return {
             drag: false,
             selectedOption: null,
+            selectedOptionCopy: null,
             allCategories: false,
-            options: [
-                { value: 'installation', text: 'встановлення унітазу' },
-                { value: 'removal', text: 'складний демонтаж унітазу - 300 грн' },
-            ],
-            actions: [
-                { name: 'встановлення унітазу', amount: '500 шт.', error: false },
-                { name: 'простий демонтаж унітазу', amount: '200 шт.', error: false },
-                { name: 'заміна унітазу', amount: '600 шт.', error: true },
-            ]
+            optionId: null,
+            options: [],
+            optionsCopy: [],
+            prices: [],
+            actions: [],
+            selectedOptions: []
         };
     },
+    methods: {
+        async copyCategories() {
+        try {
+            const response = await this.axios.get(`http://localhost/api/price/rows/${this.selectedOptionCopy}`);
+            const copiedCategories = response.data.categories; // Assuming your API returns the categories.
+
+            // Add a check to verify API response:
+            if (!Array.isArray(copiedCategories)) { 
+                 throw new Error('Invalid data returned from the API.');
+            }
+
+            this.actions.push(...copiedCategories);
+
+        } catch (error) {
+            console.error('Error copying categories:', error);
+        }
+    },
+        async saveData() {
+            try {
+                const isExistCategory = await this.fetchActionsCheck(this.optionId); // Check synchronously 
+
+                const httpMethod = isExistCategory ? 'put' : 'post';
+                const url = isExistCategory ? `http://localhost/api/price/rows/${this.optionId}` : 'http://localhost/api/price/rows';
+
+                const response = await this.axios[httpMethod](url, {
+                    priceId: this.optionId,
+                    categories: this.actions.map((item) => item.id)
+                });
+
+                alert(isExistCategory ? 'Data updated' : 'Data saved');  // Conditional success message
+
+            } catch (error) {
+                console.error('Error saving data:', error);
+                // Handle error gracefully, e.g., display an error message to the user
+            }
+        },
+        addOptionsToActions() {
+            const selectedData = this.selectedOptions.map(id => {
+                // Find the full price object based on the selected ID
+                const matchingPrice = this.prices.find(price => price.id === id);
+                return matchingPrice; // Or return a modified version 
+            });
+
+            this.actions.push(...selectedData);
+        },
+        deleteAction(index) {
+            this.actions.splice(index, 1); // Remove the element at the given index
+        },
+        async fetchAllPrices() {
+            try {
+                const response = await this.axios.get('http://localhost/api/prices');
+                this.prices = response.data;
+            } catch (error) {
+                console.error('Error fetching prices:', error);
+            }
+        },
+        async fetchDataTypeOfOrders() {
+            try {
+                const response = await this.axios.get('http://localhost/api/typeoforders');
+                this.options = response.data.map((item) => ({ ...item, techDocumentations: typeof techDocumentations === "JSON" ? JSON.parse(item.techDocumentations) : [] }));
+                this.optionsCopy = this.options;
+
+            } catch (error) {
+                console.error('Error fetching typeoforders:', error);
+            }
+        },
+        async fetchPriceData(priceId) {
+            try {
+                const response = await this.axios.get(`http://localhost/api/prices/${priceId}`);
+                this.prices = response.data;
+            } catch (error) {
+            }
+        },
+        async fetchActions(priceId) {
+            try {
+                const response = await this.axios.get(`http://localhost/api/price/rows/${priceId}`);
+                this.actions = response.data.categories.sort((a, b) => {
+                    return response.data.categoriesOrders.indexOf(a.id) - response.data.categoriesOrders.indexOf(b.id);
+                    });
+
+            } catch (error) {
+                this.actions = [];
+            }
+        },
+        async fetchActionsCheck(priceId) {
+            const response = await this.axios.get(`http://localhost/api/price/rows/${priceId}`);
+            return response.data.categories;
+        }
+    }
 };
 </script>
 

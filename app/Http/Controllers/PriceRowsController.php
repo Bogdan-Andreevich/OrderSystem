@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\PriceRows;
+use App\Models\Price;
 use Illuminate\Support\Facades\Validator;
 
 class PriceRowsController extends Controller
@@ -12,7 +13,7 @@ class PriceRowsController extends Controller
     {
         try {
             $priceRows = PriceRows::all();
-            if ($priceRows ->count() === 0) {
+            if ($priceRows->count() === 0) {
                 return response()->json(['message' => 'Масив питань порожній']);
             }
             return response()->json($priceRows->map(function ($row) {
@@ -29,9 +30,6 @@ class PriceRowsController extends Controller
         $validator = Validator::make($request->all(), [
             'priceId' => 'required|integer',
             'categories' => 'required|array',
-            'categories.*.id' => 'required|integer',
-            'categories.*.title' => 'required|string',
-            'categories.*.order' => 'required|string'
         ]);
 
         if ($validator->fails()) {
@@ -61,9 +59,6 @@ class PriceRowsController extends Controller
         $validator = Validator::make($request->all(), [
             'priceId' => 'required|integer',
             'categories' => 'required|array',
-            'categories.*.id' => 'required|integer',
-            'categories.*.title' => 'required|string',
-            'categories.*.order' => 'required|string'
         ]);
 
         if ($validator->fails()) {
@@ -86,6 +81,31 @@ class PriceRowsController extends Controller
             return response()->json($formattedData);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Помилка оновлення рядку прайсу'], 500);
+        }
+    }
+
+    public function getById(int $priceId)
+    {
+        try {
+            $priceRow = PriceRows::where('id', $priceId)->firstOrFail();
+
+            $categories = json_decode($priceRow->categories, true);
+
+
+            $prices = Price::whereIn('id', $categories)->get(); 
+
+            $formattedData = [
+                'id' => $priceRow->id,
+                'priceId' => $priceRow->priceId,
+                'categoriesOrders' => $categories, // Decode the JSON array
+                'categories' => $prices, // Decode the JSON array
+                'updated_at' => $priceRow->updated_at,
+                'created_at' => $priceRow->created_at,
+            ];
+
+            return response()->json($formattedData);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e], 500);
         }
     }
 }

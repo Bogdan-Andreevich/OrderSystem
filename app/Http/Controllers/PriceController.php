@@ -20,7 +20,6 @@ class PriceController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Ціни не знайдено'], 404);
         }
-
     }
 
     public function store(Request $request)
@@ -31,7 +30,7 @@ class PriceController extends Controller
             'nameRu' => 'required|string',
             'unit' => 'required|string',
             'price' => 'required|string',
-            'techDocumentations' => 'required|array',
+            'techDocumentations' => 'array',
         ]);
 
         if ($validator->fails()) {
@@ -44,7 +43,7 @@ class PriceController extends Controller
             $prices = Price::create($validatedData);
             return response()->json($prices);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Помилка створення ціни'], 500);
+            return response()->json(['error' => $e], 500);
         }
     }
 
@@ -56,7 +55,7 @@ class PriceController extends Controller
             'nameRu' => 'required|string',
             'unit' => 'required|string',
             'price' => 'required|string',
-            'techDocumentations' => 'required|array',
+            'techDocumentations' => 'array',
         ]);
 
         if ($validator->fails()) {
@@ -73,6 +72,19 @@ class PriceController extends Controller
             return response()->json(['error' => 'Ціну на оновлення не знайдено'], 500);
         }
     }
+
+    public function findByCategoryId(int $categoryId)
+    {
+        $prices = Price::where('categoryId', $categoryId)->get();
+
+        if ($prices->isEmpty()) {
+            return null; // Or any other handling you prefer for 'not found' cases
+        }
+
+        return $prices;
+    }
+
+
 
     public function destroy($id)
     {
