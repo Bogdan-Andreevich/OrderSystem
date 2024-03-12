@@ -105,21 +105,21 @@ export default {
     },
     methods: {
         async copyCategories() {
-        try {
-            const response = await this.axios.get(`http://localhost/api/price/rows/${this.selectedOptionCopy}`);
-            const copiedCategories = response.data.categories; // Assuming your API returns the categories.
+            try {
+                const response = await this.axios.get(`http://localhost/api/price/rows/${this.selectedOptionCopy}`);
+                const copiedCategories = response.data.categories; // Assuming your API returns the categories.
 
-            // Add a check to verify API response:
-            if (!Array.isArray(copiedCategories)) { 
-                 throw new Error('Invalid data returned from the API.');
+                // Add a check to verify API response:
+                if (!Array.isArray(copiedCategories)) {
+                    throw new Error('Invalid data returned from the API.');
+                }
+
+                this.actions.push(...copiedCategories);
+
+            } catch (error) {
+                console.error('Error copying categories:', error);
             }
-
-            this.actions.push(...copiedCategories);
-
-        } catch (error) {
-            console.error('Error copying categories:', error);
-        }
-    },
+        },
         async saveData() {
             try {
                 const isExistCategory = await this.fetchActionsCheck(this.optionId); // Check synchronously 
@@ -181,7 +181,7 @@ export default {
                 const response = await this.axios.get(`http://localhost/api/price/rows/${priceId}`);
                 this.actions = response.data.categories.sort((a, b) => {
                     return response.data.categoriesOrders.indexOf(a.id) - response.data.categoriesOrders.indexOf(b.id);
-                    });
+                });
 
             } catch (error) {
                 this.actions = [];

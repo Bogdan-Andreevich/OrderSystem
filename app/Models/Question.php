@@ -16,6 +16,10 @@ class Question extends Model
         'comment',
         'price',
         'parent_id',
+        'typeDocId',
+        'answers',
+        'subQuestions',
+        'index'
     ];
 
     public function answers()

@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from "vue-router";
 
 
 
+import DetailQuestion from './components/order/detailQuestion.vue';
 import PriceOfOrder from './components/prices/TypeOfPrices.vue';
 import TypeOfOrder from './components/order/TypeOfOrder.vue';
 import PriceIndex from './components/prices/Index.vue';
@@ -48,6 +49,14 @@ export const routes = [
         name: 'priceOfOrder',
         path: '/priceoforder',
         component: PriceOfOrder,
+    },
+
+    {
+        // UserProfile will be rendered inside User's <router-view>
+        // when /user/:id/profile is matched
+        name: 'detailQuestion',
+        path: '/detailQuestion',
+        component: DetailQuestion,
     },
 
 

@@ -11,10 +11,17 @@ class QuestionController extends Controller
     public function create()
     {
         try {
-            $questions = Question::whereNull('parent_id')->with('answers')->get();
+            $questions = Question::whereNull('parent_id')->get();
             if ($questions->count() === 0) {
                 return response()->json(['message' => 'Масив питань порожній']);
             }
+
+            foreach ($questions as &$question) {
+                $question->answers = json_decode($question->answers, true); // Convert to array
+                $question->subQuestions = json_decode($question->subQuestions, true); // Convert to array
+            }
+
+
             return response()->json($questions);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Питаннь не знайдено'], 404);
@@ -24,13 +31,34 @@ class QuestionController extends Controller
     public function getQuestionById($id)
     {
         try {
-            $questions = Question::findOrFail($id)->load('answers');
+            $question = Question::findOrFail($id);
+
+            $question->answers = json_decode($question->answers, true); // Convert to array
+            $question->subQuestions = json_decode($question->subQuestions, true); // Convert to array
+
+
+            return response()->json($question);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Питання не знайдено'], 404);
+        }
+    }
+
+    public function getQuestionByTypeDoc(string $id)
+    {
+        try {
+            $questions = Question::where('typeDocId', '=', $id)->get();
+
+            foreach ($questions as &$question) {
+                $question->is_add_description = boolval($question->is_add_description); // Convert to bool
+                $question->answers = json_decode($question->answers, true); // Convert to array
+                $question->subQuestions = json_decode($question->subQuestions, true); // Convert to array
+            }
+
+
             return response()->json($questions);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Питання не знайдено'], 404);
         }
-
-
     }
 
     public function store(Request $request)
@@ -40,8 +68,11 @@ class QuestionController extends Controller
             'question_description' => 'nullable|string',
             'is_add_description' => 'nullable|boolean',
             'comment' => 'nullable|string',
-            'price' => 'nullable|integer',
-            'parent_id' => 'nullable|prohibited'
+            'typeDocId' => 'nullable|string',
+            'subQuestions' => 'nullable|json',
+            'answers' => 'nullable|json',
+            'index' => 'nullable|integer',
+
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -58,7 +89,6 @@ class QuestionController extends Controller
                 'error' => "Помилка створення питання: " . $e->getMessage()
             ], 500);
         }
-
     }
 
     public function answers(Request $request)
@@ -89,7 +119,6 @@ class QuestionController extends Controller
             ]);
 
             return response()->json($reply);
-
         } catch (\Exception $e) {
             return response()->json(['error' => 'Головне питання не знайдено'], 404);
         }
@@ -102,8 +131,9 @@ class QuestionController extends Controller
             'question_description' => 'nullable|string',
             'is_add_description' => 'nullable|boolean',
             'comment' => 'nullable|string',
-            'price' => 'nullable|integer',
-            'parent_id' => 'nullable|integer|exists:questions,id'
+            'typeDocId' => 'nullable|string',
+            'subQuestions' => 'nullable|json',
+            'answers' => 'nullable|json',
         ]);
 
         if ($validator->fails()) {
@@ -133,6 +163,5 @@ class QuestionController extends Controller
                 'error' => "Питання не знайдено: " . $e->getMessage()
             ], 500);
         }
-
     }
 }

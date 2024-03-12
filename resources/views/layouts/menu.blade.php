@@ -41,6 +41,12 @@
     </a>
 </li>
 
+<li class="nav-item">
+    <a href="{{ route('home').'/detailQuestion' }}" class="nav-link {{ (\Request::getPathInfo() == '/account/detailQuestion')? 'active' : '' }}">
+        <p>Питання</p>
+    </a>
+</li>
+
 
 
 @if (Auth::user()->role == 'admin')

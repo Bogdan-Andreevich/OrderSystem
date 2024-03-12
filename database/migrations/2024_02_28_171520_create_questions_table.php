@@ -18,8 +18,8 @@ class CreateQuestionsTable extends Migration
             $table->string('question');
             $table->text('question_description')->nullable();
             $table->boolean('is_add_description')->default(false);
-            $table->string('comment')->nullable();;
-            $table->integer('price')->nullable();;
+            $table->string('comment')->nullable();
+            $table->integer('price')->nullable();
             $table->unsignedBigInteger('parent_id')->nullable();
             $table->timestamps();
 
