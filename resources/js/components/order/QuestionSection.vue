@@ -10,9 +10,9 @@
             <input type="checkbox" id="is_add_description" v-model="sectionData.is_add_description"
                 :checked="sectionData.is_add_description == 1">
             <section v-if="sectionData.index !== 0">
-                <label for="checkbox" class="form-label">Відображати, коли:</label>
+                <label for="checkbox" class="form-label">Відображати, коли: </label>
                 <select id="selector" class="form-select" v-model="sectionData.selectedOption">
-                    <option v-for="(answer, answerIndex) in sectionData.answers" :key="answerIndex"
+                    <option v-for="(answer, answerIndex) in answers" :key="answerIndex"
                         :value="answer.title">
                         {{ answer.title }}
                     </option>
@@ -21,8 +21,9 @@
 
         </div>
         <div class="question-navigation">
-            <button class="btn btn-primary" @click="addAnswers(sectionData, sectionData.index)">+</button>
-            <button class="btn btn-secondary" @click="addSubQuestion(sectionData)">?</button>
+            <button class="btn btn-primary" @click="addAnswers(sectionData, sectionData.index)">Додати
+                відповідь</button>
+            <button class="btn btn-secondary" @click="addSubQuestion(sectionData)">Додати субпитання</button>
         </div>
         <div class="answer" v-for="(answer, answerIndex) in sectionData.answers" :key="answerIndex">
             <button class="btn btn-tool" @click="removeAnswer(sectionIndex, answerIndex)">
@@ -39,17 +40,14 @@
 
             <label for="selector" class="form-label">Додати до ціни:</label>
             <select id="selector" class="form-select" v-model="answer.addToPrice">
-                <option v-for="(price, priceIndex) in priceList" :key="priceIndex"
-                        :value="price.name">
-                        {{ price.name }} - {{ price.price }}
-                    </option>
+                <option v-for="(price, priceIndex) in priceList" :key="priceIndex" :value="price.name">
+                    {{ price.name }} - {{ price.price }}
+                </option>
             </select>
-
-            
         </div>
 
         <div v-for="(sub, subIndex) in sectionData.subQuestions" :key="sub.id">
-            <question-section :priceList="priceList" :sectionData="sub" :index="sectionData.index"
+            <question-section :priceList="priceList" :answers="sectionData.answers" :sectionData="sub" :index="sectionData.index"
                 @deleteQuestion="handleDeleteSubQuestion(sub.index, sub.id)" @add-sub-question="addSubQuestion">
             </question-section>
         </div>
@@ -59,7 +57,7 @@
 <script>
 export default {
     name: "QuestionSection",
-    props: ['sectionData', 'index', 'priceList'],
+    props: ['sectionData', 'index', 'priceList', 'answers'],
     methods: {
         addSubQuestion(parentQuestion) {
             const newSubQuestion = {
@@ -86,7 +84,6 @@ export default {
         },
         handleDeleteSubQuestion(sectionIndex, questionId) {
             const section = this.sectionData;
-            console.log(section, questionId);
             if (section) {
                 const subQuestionIndex = section.subQuestions.findIndex(subQ => +subQ.id === +questionId);
                 if (subQuestionIndex !== -1) {

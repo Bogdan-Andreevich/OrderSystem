@@ -28,7 +28,7 @@ class PriceController extends Controller
         $validator = Validator::make($request->all(), [
             'categoryId' => 'required|integer',
             'name' => 'required|string',
-            'nameRu' => 'required|string',
+            'nameRu' => 'nullable|string',
             'unit' => 'required|string',
             'price' => 'required|string',
             'techDocumentations' => 'array',
@@ -53,7 +53,7 @@ class PriceController extends Controller
         $validator = Validator::make($request->all(), [
             'categoryId' => 'required|integer',
             'name' => 'required|string',
-            'nameRu' => 'required|string',
+            'nameRu' => 'nullable|string',
             'unit' => 'required|string',
             'price' => 'required|string',
             'techDocumentations' => 'array',
@@ -85,10 +85,6 @@ class PriceController extends Controller
 
         foreach ($prices as &$question) {
             $question->techDocumentations = PriceRows::where('categories->id', $question->id)->get();
-        }
-
-        if ($prices->isEmpty()) {
-            return null; // Or any other handling you prefer for 'not found' cases
         }
 
         return [$prices, $pricesRows];

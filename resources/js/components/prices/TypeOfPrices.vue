@@ -47,6 +47,8 @@
                                                 <option value="шт">шт</option>
                                                 <option value="м2">м2</option>
                                                 <option value="м/пог">м/пог</option>
+                                                <option value="м/куб">м/куб</option>
+                                                <option value="год">год</option>
                                             </select>
                                         </td>
                                         <td>
@@ -105,6 +107,8 @@ export default {
             this.showList = true; // Assuming you have a variable to control list visibility
         },
         async saveChanges() {
+            if(this.isSave) return;
+            this.isSave = true;
             try {
                 for (const item of this.orders) {
                     if (item.id) {
@@ -115,6 +119,8 @@ export default {
                         await this.axios.post('http://localhost/api/prices', item);
                     }
                 }
+                this.fetchData();
+                this.isSave = false;
                 alert('Changes saved!'); // Or a more suitable success message
             } catch (error) {
                 console.error('Error saving changes:', error);
@@ -123,7 +129,7 @@ export default {
         },
         handleValueChange(newValue) {
             this.categoryId = newValue;
-            // this.orders = newValue===0 ? this.allOrders : this.allOrders.filter((item) => +item.categoryId === +newValue)
+            if(newValue===0 ) return this.orders = this.allOrders;
             this.fetchDataById(newValue)
         },
         async fetchData() {
@@ -169,7 +175,7 @@ export default {
         async fetchCategories() {
             try {
                 const response = await this.axios.get('http://localhost/api/categories');
-                this.categories = response.data.slice(1);
+                this.categories = response.data;
             } catch (error) {
                 console.error('Error fetching categories:', error);
             }
@@ -195,6 +201,7 @@ export default {
     },
     data() {
         return {
+            isSave: false,
             allTz: [],
             allOrders: [],
             categoryId: 1,

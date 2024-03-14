@@ -16,7 +16,7 @@
         </section>
     </div>
     <section v-if="selectedUnitId"> 
-        <button class="btn btn-primary btn-sm" @click="handleClick">?</button>
+        <button class="btn btn-primary btn-sm" @click="handleClick">Додати питання</button>
         <div class="card">
             <div class="card-body">
                 <div class="input-container">
@@ -53,7 +53,6 @@ export default {
         handleClearData(){
             this.selectedUnitId = null;
             this.selectedUnitCopyId = null;
-            this.unitTypes = [];
             this.sections = [];
             this.sectionsCopy = [];
             this.priceList = [];

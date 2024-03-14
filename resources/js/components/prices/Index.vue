@@ -134,14 +134,15 @@ export default {
         },
         async saveData() {
             try {
-                const isExistCategory = await this.fetchActionsCheck(this.optionId); // Check synchronously 
-
+                
+                const isExistCategory = await this.fetchActionsCheck(this.optionId); // Check synchronously
                 const httpMethod = isExistCategory ? 'put' : 'post';
                 const url = isExistCategory ? `http://localhost/api/price/rows/${this.optionId}` : 'http://localhost/api/price/rows';
 
+                const categories = this.actions.map((item) => item.id);
                 await this.axios[httpMethod](url, {
                     priceId: this.optionId,
-                    categories: this.actions.map((item) => item.id)
+                    categories: categories.length==0 ? [-1] : categories
                 });
 
                 alert(isExistCategory ? 'Data updated' : 'Data saved');  // Conditional success message
@@ -156,9 +157,16 @@ export default {
                 // Find the full price object based on the selected ID
                 const matchingPrice = this.prices.find(price => price.id === id);
                 return matchingPrice; // Or return a modified version 
-            });
+            })[0];
+            
+            
+            if(this.actions.length===0){
+                this.actions.push(selectedData);
+            } else{
+                const isPriceAdded = this.actions.find((item)=>item.id===selectedData.id)
+                if(!isPriceAdded) return this.actions.push(selectedData);
+            }
 
-            this.actions.push(...selectedData);
         },
         deleteAction(index) {
             this.actions.splice(index, 1); // Remove the element at the given index
@@ -184,13 +192,14 @@ export default {
         async fetchPriceData(priceId) {
             try {
                 const response = await this.axios.get(`http://localhost/api/prices/${priceId}`);
-                this.prices = response.data;
+                this.prices = response.data[0];
             } catch (error) {
             }
         },
         async fetchActions(priceId) {
             try {
                 const response = await this.axios.get(`http://localhost/api/price/rows/${priceId}`);
+                console.log(response.data, 'HERE');
                 this.actions = response.data.categories.sort((a, b) => {
                     return response.data.categoriesOrders.indexOf(a.id) - response.data.categoriesOrders.indexOf(b.id);
                 });

@@ -8,14 +8,17 @@
       <li class="nav-item" v-for="category in categories" :key="category.id"
         @click="emitValue(category.id); setActive(category); markForRemoval(category)"
         :class="{ 'to-remove': isRemove && category.marked, 'active': activeCategory === category.id }">
-        <a class="nav-link" href="#">{{ category.name }}</a>
+        <a class="nav-link" href="#">{{ category.name }}
+          <span v-if="isRemove">X</span> 
+        </a>
+
       </li>
     </ul>
     <ul class="navbar-nav ml-auto"> <li class="nav-item">
         <button class="btn btn-primary" @click="showForm = true">+</button>
       </li>
       <li class="nav-item">
-        <button class="btn btn-danger" @click="isRemove = true">×</button>
+        <button class="btn btn-danger" @click="handleRemove">×</button>
       </li>
     </ul>
 
@@ -47,6 +50,9 @@ export default {
     this.fetchCategories();
   },
   methods: {
+    handleRemove() {
+      this.isRemove = !this.isRemove;
+    },
     setActive(category) {
       this.activeCategory = category.id;
       this.isMainCategory = false;

@@ -84,10 +84,10 @@ class PriceRowsController extends Controller
         }
     }
 
-    public function getById(int $priceId)
+    public function getById(string $priceId)
     {
         try {
-            $priceRow = PriceRows::where('id', $priceId)->firstOrFail();
+            $priceRow = PriceRows::where('priceId', $priceId)->firstOrFail();
 
             $categories = json_decode($priceRow->categories, true);
 
@@ -105,7 +105,7 @@ class PriceRowsController extends Controller
 
             return response()->json($formattedData);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e], 500);
+            return response()->json(['error' => $e], 200);
         }
     }
 }
