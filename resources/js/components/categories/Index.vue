@@ -70,7 +70,7 @@ export default {
       }
     },
     deleteCategory(id) {
-      this.axios.delete(`http://crm-test.san-sanych.in.ua/api/categories/${id}`)
+      this.axios.delete(`http://localhost/api/categories/${id}`)
         .then(() => {
           // Remove from categories array
           this.categories = this.categories.filter(category => category.id !== id);
@@ -81,7 +81,7 @@ export default {
         });
     },
     addCategory() {
-      this.axios.post('http://crm-test.san-sanych.in.ua/api/categories', {
+      this.axios.post('http://localhost/api/categories', {
         name: this.categoryName,
         text: this.categoryName
       })
@@ -100,7 +100,7 @@ export default {
     },
     async fetchCategories() {
       try {
-        const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/categories');
+        const response = await this.axios.get('http://localhost/api/categories');
         this.categories = response.data;
         // this.emitValue('valueChanged', response.data[0].id);
         // this.setActive(response.data[0])

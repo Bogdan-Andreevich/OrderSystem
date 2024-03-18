@@ -1,6 +1,7 @@
 <template>
     <div class="unit-replacement-section">
-        <select v-model="selectedUnitId" class="form-control form-control-sm" @change="fetchPriceList(); fetchQuestion();">
+        <select v-model="selectedUnitId" class="form-control form-control-sm"
+            @change="fetchPriceList(); fetchQuestion();">
             <option v-for="unitType in unitTypes" :key="unitType.id" :value="unitType.id">
                 {{ unitType.name }}
             </option>
@@ -15,15 +16,19 @@
             </select>
         </section>
     </div>
-    <section v-if="selectedUnitId"> 
+    <section v-if="selectedUnitId">
         <button class="btn btn-primary btn-sm" @click="handleClick">Додати питання</button>
         <div class="card">
             <div class="card-body">
                 <div class="input-container">
-
-                    <section class="que-template" v-for="(sectionData, index) in sections" :key="index">
-                        <QuestionSection @deleteQuestion="handleDeleteQuestion" :priceList="priceList" :sectionData="sectionData" :index="1" />
-                    </section>
+                    <draggable :list="sections" group="sections" @start="dragStart" @end="dragEnd" item-key="index">
+                        <template #item="{ element, index }">
+                            <div>
+                                <QuestionSection @deleteQuestion="handleDeleteQuestion" :priceList="priceList"
+                                    :sectionData="element" :index="1" />
+                            </div>
+                        </template>
+                    </draggable>
                     <button @click="saveData" class="btn btn-primary">Зберегти</button>
 
                 </div>
@@ -34,10 +39,13 @@
 
 <script>
 import QuestionSection from './QuestionSection.vue'
+import draggable from 'vuedraggable'
+
 export default {
     name: "DetailQuestion",
     components: {
-        QuestionSection
+        QuestionSection,
+        draggable
     },
     data() {
         return {
@@ -50,7 +58,7 @@ export default {
         };
     },
     methods: {
-        handleClearData(){
+        handleClearData() {
             this.selectedUnitId = null;
             this.selectedUnitCopyId = null;
             this.sections = [];
@@ -59,7 +67,7 @@ export default {
         },
         async fetchPriceList() {
             try {
-                const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/price/rows/${this.selectedUnitId}`);
+                const response = await this.axios.get(`http://localhost/api/price/rows/${this.selectedUnitId}`);
                 this.priceList = response.data.categories;
 
             } catch (error) {
@@ -67,10 +75,23 @@ export default {
             }
         },
         handleCopyQuestion() {
-            this.sections = [...this.sections, ...this.sectionsCopy]
+            this.sections = [...this.sections, ...this.sectionsCopy.map(this.handleCopyAnswer)]
+        },
+        handleCopyAnswer(item) {
+            let answers = item.answers
+            if (item.answers) {
+                answers = answers.map((itemAnswer) => ({ ...itemAnswer, description: itemAnswer.description === "" ? itemAnswer.title : itemAnswer.description }))
+            }
+
+            if (item.subQuestions) {
+                this.handleCopyAnswer(item.subQuestions)
+            }
+
+            return { ...item, answers }
         },
         saveData() {
-            const payload = this.sections;
+            let i = 0;
+            const payload = this.sections.map((item, index) => ({ ...item, index: ++i }));
 
             for (const question of payload) {
                 if (question.isNew) { // Check for existing ID
@@ -83,7 +104,7 @@ export default {
         },
 
         createNewQuestionData(payload) {
-            this.axios.post('http://crm-test.san-sanych.in.ua/api/questions', { ...payload, subQuestions: JSON.stringify(payload.subQuestions), answers: JSON.stringify(payload.answers), typeDocId: this.selectedUnitId.toString() })
+            this.axios.post('http://localhost/api/questions', { ...payload, subQuestions: JSON.stringify(payload.subQuestions), answers: JSON.stringify(payload.answers), typeDocId: this.selectedUnitId.toString() })
                 .then(() => {
                     alert("Questions created!")
                 })
@@ -94,7 +115,7 @@ export default {
 
         updateQuestionData(payload) {
             const questionId = payload.id;
-            this.axios.put(`http://crm-test.san-sanych.in.ua/api/questions/${questionId}`, { ...payload, subQuestions: JSON.stringify(payload.subQuestions), answers: JSON.stringify(payload.answers), typeDocId: this.selectedUnitId.toString() })
+            this.axios.put(`http://localhost/api/questions/${questionId}`, { ...payload, subQuestions: JSON.stringify(payload.subQuestions), answers: JSON.stringify(payload.answers), typeDocId: this.selectedUnitId.toString() })
                 .then(() => {
                     alert("Questions updated!")
                 })
@@ -102,7 +123,6 @@ export default {
                     console.log("ERROR: ", e);
                 });
         },
-
 
         handleDeleteQuestion(targetId) {
             let newSections = JSON.parse(JSON.stringify(this.sections)); // True Deep Copy
@@ -143,9 +163,9 @@ export default {
         async fetchQuestion() {
             if (this.selectedUnitId) { // Check if a unit is selected
                 try {
-                    
-                    const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/questionsTypeById/${this.selectedUnitId}`);
-                    this.sections = response.data;
+
+                    const response = await this.axios.get(`http://localhost/api/questionsTypeById/${this.selectedUnitId}`);
+                    this.sections = response.data.sort((a,b)=>a.index - b.index).map((item)=>({...item, index:0}));
                 } catch (error) {
                     console.error("Error fetching questions:", error);
                 }
@@ -156,7 +176,7 @@ export default {
         async fetchQuestionCopy() {
             if (this.selectedUnitCopyId) { // Check if a unit is selected
                 try {
-                    const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/questionsTypeById/${this.selectedUnitCopyId}`);
+                    const response = await this.axios.get(`http://localhost/api/questionsTypeById/${this.selectedUnitCopyId}`);
                     this.sectionsCopy = response.data;
                 } catch (error) {
                     console.error("Error fetching questions:", error);
@@ -167,7 +187,7 @@ export default {
         }
     },
     mounted() {
-        this.axios.get("http://crm-test.san-sanych.in.ua/api/typeoforders").then((response) => {
+        this.axios.get("http://localhost/api/typeoforders").then((response) => {
             this.unitTypes = response.data;
         });
 

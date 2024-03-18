@@ -980,7 +980,7 @@ import NestedQuestion from './NestedQuestion.vue'
 
             // http://193.169.189.29/bot/api/dict.php?table=city
             this.axios
-                .get(`http://crm-test.san-sanych.in.ua/account/api/order/create`)
+                .get(`http://localhost/account/api/order/create`)
                 .then(async (response) => {
                     console.log(response.data);
 
@@ -1024,7 +1024,7 @@ import NestedQuestion from './NestedQuestion.vue'
 
 
 
-                    const typeOfOrders = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/typeoforders`)
+                    const typeOfOrders = await this.axios.get(`http://localhost/api/typeoforders`)
 
                     typeOfOrders.data.forEach((element) => {
                         this.dictionaries.order_types.push({
@@ -1256,7 +1256,7 @@ import NestedQuestion from './NestedQuestion.vue'
 
 
                 this.axios
-                    .post('http://crm-test.san-sanych.in.ua/account/api/order/store', send_data)
+                    .post('http://localhost/account/api/order/store', send_data)
                     .then(response => {
                         this.errors = {};
 
@@ -1316,7 +1316,7 @@ import NestedQuestion from './NestedQuestion.vue'
 
                 if(this.order.selected_order_type == null) return [];
 
-                return this.axios.get(`http://crm-test.san-sanych.in.ua/api/questionsTypeById/${this.order.selected_order_type.id}`).then(async (response) => {
+                return this.axios.get(`http://localhost/api/questionsTypeById/${this.order.selected_order_type.id}`).then(async (response) => {
                     //this.ordertype_detail_data = response.data;
                     // this.order.ordertype_detail_data = [];
                       if( response.data != null ){
@@ -1347,7 +1347,7 @@ import NestedQuestion from './NestedQuestion.vue'
 
                     // }
 
-                    const priceList = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/price/rows/${this.order.selected_order_type.id}`);
+                    const priceList = await this.axios.get(`http://localhost/api/price/rows/${this.order.selected_order_type.id}`);
                     this.order.ordertype_detail_data.PRICE = priceList.data.categories.map((item)=>({...item, count:1, isActive: true}));
                  
 
@@ -1433,7 +1433,7 @@ import NestedQuestion from './NestedQuestion.vue'
 
             get_call(){
 
-                this.axios.get(`http://crm-test.san-sanych.in.ua/account/api/getcall`).then((response) => {
+                this.axios.get(`http://localhost/account/api/getcall`).then((response) => {
                     console.log(response.data);
 
                     this.call = response.data;
@@ -1452,7 +1452,7 @@ import NestedQuestion from './NestedQuestion.vue'
 
 
             get_client(){
-                this.axios.get(`http://crm-test.san-sanych.in.ua/account/api/getclient?phone=`+this.call.callerid).then((response) => {
+                this.axios.get(`http://localhost/account/api/getclient?phone=`+this.call.callerid).then((response) => {
                     console.log(response.data);
 
                     this.client = response.data;

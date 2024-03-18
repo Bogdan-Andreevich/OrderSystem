@@ -134,6 +134,7 @@ class QuestionController extends Controller
             'typeDocId' => 'nullable|string',
             'subQuestions' => 'nullable|json',
             'answers' => 'nullable|json',
+            'index' => 'nullable|integer',
         ]);
 
         if ($validator->fails()) {

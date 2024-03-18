@@ -17,8 +17,8 @@ class CreatePricesTable extends Migration
             $table->id();
             $table->string('name');
             $table->string('nameRu')->nullable();
-            $table->string('unit');
-            $table->string('price');
+            $table->string('unit')->nullable();
+            $table->string('price')->nullable();
             $table->json('techDocumentations');
             $table->unsignedInteger('categoryId');
             $table->timestamps();

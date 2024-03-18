@@ -2,12 +2,12 @@
     <div class="workflow">
         <section class="top-selector">
             <select class="form-control top-select top-select-1" v-model="selectedOption">
-                <option v-for="option in options" :value="option.id">{{ option.name }}</option>
+                <option v-for="option in options" :value="option.id">{{ option.name }} -- {{ option.categoryName }}</option>
             </select>
 
             <div class="input-group top-selector-section">
                 <select class="form-control p-selector top-select top-select-2" v-model="selectedOptionCopy">
-                    <option v-for="option in options" :value="option.id">{{ option.name }}</option>
+                    <option v-for="option in options" :value="option.id">{{ option.name }} -- {{ option.categoryName }}</option>
                 </select>
 
                 <span class="input-group-append">
@@ -70,13 +70,15 @@ export default {
 
     name: 'PricesComponent',
     mounted() {
-        this.fetchDataTypeOfOrders().then(() => {
-            const optionIdData = sessionStorage.getItem("optionId")
+        this.fetchDataCategories().then(() => {
+            this.fetchDataTypeOfOrders().then(() => {
+                const optionIdData = sessionStorage.getItem("optionId")
 
-            if (optionIdData) {
-                this.changeSelection(+optionIdData)
-                sessionStorage.removeItem("optionId")
-            }
+                if (optionIdData) {
+                    this.changeSelection(+optionIdData)
+                    sessionStorage.removeItem("optionId")
+                }
+            })
         })
 
     },
@@ -118,7 +120,7 @@ export default {
         },
         async copyCategories() {
             try {
-                const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/price/rows/${this.selectedOptionCopy}`);
+                const response = await this.axios.get(`http://localhost/api/price/rows/${this.selectedOptionCopy}`);
                 const copiedCategories = response.data.categories; // Assuming your API returns the categories.
 
                 // Add a check to verify API response:
@@ -134,15 +136,15 @@ export default {
         },
         async saveData() {
             try {
-                
+
                 const isExistCategory = await this.fetchActionsCheck(this.optionId); // Check synchronously
                 const httpMethod = isExistCategory ? 'put' : 'post';
-                const url = isExistCategory ? `http://crm-test.san-sanych.in.ua/api/price/rows/${this.optionId}` : 'http://crm-test.san-sanych.in.ua/api/price/rows';
+                const url = isExistCategory ? `http://localhost/api/price/rows/${this.optionId}` : 'http://localhost/api/price/rows';
 
                 const categories = this.actions.map((item) => item.id);
                 await this.axios[httpMethod](url, {
                     priceId: this.optionId,
-                    categories: categories.length==0 ? [-1] : categories
+                    categories: categories.length == 0 ? [-1] : categories
                 });
 
                 alert(isExistCategory ? 'Data updated' : 'Data saved');  // Conditional success message
@@ -157,15 +159,19 @@ export default {
                 // Find the full price object based on the selected ID
                 const matchingPrice = this.prices.find(price => price.id === id);
                 return matchingPrice; // Or return a modified version 
-            })[0];
+            });
             
-            
-            if(this.actions.length===0){
-                this.actions.push(selectedData);
-            } else{
-                const isPriceAdded = this.actions.find((item)=>item.id===selectedData.id)
-                if(!isPriceAdded) return this.actions.push(selectedData);
+
+            if (this.actions.length === 0) {
+                this.actions.push(...selectedData);
+            } else {
+                selectedData.forEach((item)=>{
+                    const isPriceAdded = this.actions.find((itemAction) => itemAction.id === item.id)
+                    if (!isPriceAdded) this.actions.push(item);
+                })
             }
+
+
 
         },
         deleteAction(index) {
@@ -173,7 +179,7 @@ export default {
         },
         async fetchAllPrices() {
             try {
-                const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/prices');
+                const response = await this.axios.get('http://localhost/api/prices');
                 this.prices = response.data;
             } catch (error) {
                 console.error('Error fetching prices:', error);
@@ -181,24 +187,33 @@ export default {
         },
         async fetchDataTypeOfOrders() {
             try {
-                const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/typeoforders');
-                this.options = response.data.map((item) => ({ ...item, techDocumentations: typeof techDocumentations === "JSON" ? JSON.parse(item.techDocumentations) : [] }));
+                const response = await this.axios.get('http://localhost/api/typeoforders');
+                this.options = response.data.map((item) => ({ ...item, categoryName: this.categories.find((itemCat) => itemCat.id === item.categoryId)?.name, techDocumentations: typeof techDocumentations === "JSON" ? JSON.parse(item.techDocumentations) : [] }));
                 this.optionsCopy = this.options;
 
             } catch (error) {
                 console.error('Error fetching typeoforders:', error);
             }
         },
+        async fetchDataCategories() {
+            try {
+                const response = await this.axios.get('http://localhost/api/categories');
+                this.categories = response.data;
+
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            }
+        },
         async fetchPriceData(priceId) {
             try {
-                const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/prices/${priceId}`);
+                const response = await this.axios.get(`http://localhost/api/prices/${priceId}`);
                 this.prices = response.data[0];
             } catch (error) {
             }
         },
         async fetchActions(priceId) {
             try {
-                const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/price/rows/${priceId}`);
+                const response = await this.axios.get(`http://localhost/api/price/rows/${priceId}`);
                 console.log(response.data, 'HERE');
                 this.actions = response.data.categories.sort((a, b) => {
                     return response.data.categoriesOrders.indexOf(a.id) - response.data.categoriesOrders.indexOf(b.id);
@@ -209,7 +224,7 @@ export default {
             }
         },
         async fetchActionsCheck(priceId) {
-            const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/price/rows/${priceId}`);
+            const response = await this.axios.get(`http://localhost/api/price/rows/${priceId}`);
             return response.data.categories;
         }
     }

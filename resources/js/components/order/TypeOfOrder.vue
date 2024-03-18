@@ -42,6 +42,9 @@
                     </td>
                     <td>
                       <select v-model="order.categoryId" class="form-control form-control-sm">
+                        <option :key="0" :value="-1">
+
+                        </option>
                         <option v-for="category in categories" :key="category.id" :value="category.id">
                           {{ category.name }}
                         </option>
@@ -49,14 +52,17 @@
                     </td>
                     <td>
                       <select v-model="order.searchId" class="form-control form-control-sm">
+                        <option :key="0" :value="-1">
+
+                        </option>
                         <option v-for="search in searches" :key="search.ID" :value="search.ID">
                           {{ search.NAME }}
                         </option>
                       </select>
                     </td>
                     <td>
-  <button class="btn btn-danger btn-sm" @click="handleDelete(order.id)">Delete</button>
-</td>
+                      <button class="btn btn-danger btn-sm" @click="handleDelete(order.id)">Delete</button>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -85,40 +91,49 @@ export default {
     this.fetchSearch();
   },
   methods: {
-    handleNavigate(categoryId, id, event) { 
-  sessionStorage.setItem("optionId", id);
-  sessionStorage.setItem("categoryId", categoryId);
+    handleNavigate(categoryId, id, event) {
+      sessionStorage.setItem("optionId", id);
+      sessionStorage.setItem("categoryId", categoryId);
 
-  // Assuming your href is the intended destination:
-  const linkDestination = event.target.href; 
+      // Assuming your href is the intended destination:
+      const linkDestination = event.target.href;
 
-  // Simulate a click with a slight delay
-  setTimeout(() => {
-    window.location.href = linkDestination; 
-  }, 100); // Adjust delay if needed
-},
+      // Simulate a click with a slight delay
+      setTimeout(() => {
+        window.location.href = linkDestination;
+      }, 100); // Adjust delay if needed
+    },
     async saveChanges() {
-      if(this.isSave) return;
-            this.isSave = true;
-      try {
-        for (const item of this.orders) {
-          if (item.id) {
-            // Existing item -> Update
-            await this.axios.put(`http://crm-test.san-sanych.in.ua/api/typeoforders/${item.id}`, {...item, techDocumentations: JSON.stringify(item.techDocumentations)});
-            
-          } else {
-            // New item -> Create
-            await this.axios.post('http://crm-test.san-sanych.in.ua/api/typeoforders', item);
-          }
-        }
+    if (this.isSave) return;
+    this.isSave = true;
+
+    try {
+        const updatePromises = this.orders.map((item) => {
+            if (item.id) {
+                return this.axios.put(`http://localhost/api/typeoforders/${item.id}`, { ...item, techDocumentations: JSON.stringify(item.techDocumentations) });
+            } else {
+                return this.axios.post('http://localhost/api/typeoforders', item);
+            }
+        });
+
+        const results = await Promise.allSettled(updatePromises);
+
+        // Process Results and Show Error Alerts
+        results.forEach((result, index) => {
+            if (result.status === 'rejected') {
+                console.error(`Error updating/creating item ${index + 1}:`, result.reason);
+                alert(`Error saving item ${index + 1}!`);
+            }
+        });
+
         this.fetchData();
         this.isSave = false;
-        alert('Changes saved!'); // Or a more suitable success message
-      } catch (error) {
+        alert('Changes saved!'); // Assuming at least some items were successful
+    } catch (error) {
         console.error('Error saving changes:', error);
-        // Handle the error appropriately
-      }
-    },
+        alert('A general error occurred while saving changes. Please check the console.'); 
+    }
+},
     handleValueChange(newValue) {
       this.parentCategoryId = newValue;
       this.orders = newValue === 0 ? this.allOrders : this.allOrders.filter((item) => +item.categoryId === +newValue)
@@ -126,11 +141,11 @@ export default {
     },
     async fetchData() {
       try {
-        const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/typeoforders');
+        const response = await this.axios.get('http://localhost/api/typeoforders');
         this.allOrders = response.data.map((item) => ({ ...item, techDocumentations: typeof techDocumentations === "JSON" ? JSON.parse(item.techDocumentations) : [] }));;
-        if(this.parentCategoryId){
+        if (this.parentCategoryId) {
           this.orders = newValue === 0 ? this.allOrders : this.allOrders.filter((item) => +item.categoryId === +this.parentCategoryId)
-        }else{
+        } else {
           this.orders = response.data.map((item) => ({ ...item, techDocumentations: typeof techDocumentations === "JSON" ? JSON.parse(item.techDocumentations) : [] }));
         }
       } catch (error) {
@@ -139,16 +154,16 @@ export default {
     },
     async fetchCategories() {
       try {
-        const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/categories');
+        const response = await this.axios.get('http://localhost/api/categories');
         this.categories = response.data;
       } catch (error) {
         console.error('Error fetching categories:', error);
       }
     },
     async fetchSearch() {
-      try { 
+      try {
         this.axios
-        const response = await this.axios.get('http://crm-test.san-sanych.in.ua/account/api/order/create');
+        const response = await this.axios.get('http://localhost/account/api/order/create');
         this.searches = response.data.ordertype;
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -165,12 +180,12 @@ export default {
         name: "",
         nameRu: "",
         searchId: 0,
-        categoryId: this.categoryId,
+        categoryId: this.categoryId || -1,
       };
     },
     handleDelete(id) {
       if (confirm("Are you sure you want to delete this order?")) {
-        this.axios.delete('http://crm-test.san-sanych.in.ua/api/typeoforders/' + id)
+        this.axios.delete('http://localhost/api/typeoforders/' + id)
           .then(response => {
             this.orders = this.orders.filter(order => order.id !== id); // Example
           })
@@ -198,7 +213,7 @@ export default {
         name: "",
         nameRu: "",
         searchId: 0,
-        categoryId: this.categoryId,
+        categoryId: this.categoryId || -1
       }
     };
   },

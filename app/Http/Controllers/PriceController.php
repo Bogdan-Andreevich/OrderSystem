@@ -29,8 +29,8 @@ class PriceController extends Controller
             'categoryId' => 'required|integer',
             'name' => 'required|string',
             'nameRu' => 'nullable|string',
-            'unit' => 'required|string',
-            'price' => 'required|string',
+            'unit' => 'string',
+            'price' => 'nullable|string',
             'techDocumentations' => 'array',
         ]);
 
@@ -54,8 +54,8 @@ class PriceController extends Controller
             'categoryId' => 'required|integer',
             'name' => 'required|string',
             'nameRu' => 'nullable|string',
-            'unit' => 'required|string',
-            'price' => 'required|string',
+            'unit' => 'string',
+            'price' => 'nullable|string',
             'techDocumentations' => 'array',
         ]);
 

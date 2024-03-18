@@ -10,9 +10,9 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <div class="card-tools">
+                            <div class="card-tools" style="float: left;">
                                 <button class="btn btn-primary btn-sm" @click="addPriceItem">
-                                    <i class="fas fa-plus"></i> &nbsp;Add
+                                    <i class="fas fa-plus"></i> &nbsp;Додати
                                 </button>
                             </div>
                         </div>
@@ -44,6 +44,7 @@
                                         </td>
                                         <td>
                                             <select v-model="order.unit" class="form-control form-control-sm">
+                                                <option value="null"></option>
                                                 <option value="шт">шт</option>
                                                 <option value="м2">м2</option>
                                                 <option value="м/пог">м/пог</option>
@@ -53,6 +54,7 @@
                                         </td>
                                         <td>
                                             <select v-model="order.categoryId" class="form-control form-control-sm">
+                                                <option value="-1"></option>
                                                 <option v-for="category in categories" :key="category.id"
                                                     :value="category.id">
                                                     {{ category.name }}
@@ -99,42 +101,59 @@ export default {
     },
     methods: {
         navigateToItemPage(item) {
-        sessionStorage.setItem("optionId", item.id)
-        this.$router.push('prices'); 
-    },
+            sessionStorage.setItem("optionId", item.id)
+            this.$router.push('prices');
+        },
         showItemList(techDocumentations) {
             this.itemList = techDocumentations;
             this.showList = true; // Assuming you have a variable to control list visibility
         },
         async saveChanges() {
-            if(this.isSave) return;
+            if (this.isSave) return;
             this.isSave = true;
+
             try {
                 for (const item of this.orders) {
                     if (item.id) {
                         // Existing item -> Update
-                        await this.axios.put(`http://crm-test.san-sanych.in.ua/api/prices/${item.id}`, item);
+                        try {
+                            await this.axios.put(`http://localhost/api/prices/${item.id}`, item);
+                        } catch (error) {
+                            console.error(`Error updating item ${item.name}!`);
+                            alert(`Error updating item ${item.name}!`);
+                            this.isSave = false; // Allow saving to be attempted again 
+                            return; // Stop processing further items
+                        }
                     } else {
                         // New item -> Create
-                        await this.axios.post('http://crm-test.san-sanych.in.ua/api/prices', item);
+                        try {
+                            await this.axios.post('http://localhost/api/prices', item);
+                        } catch (error) {
+                            console.error(`Error creating item:`, item);
+                            alert('Error creating item: ' + item);
+                            this.isSave = false; // Allow saving to be attempted again
+                            return; // Stop processing further items
+                        }
                     }
                 }
+
                 this.fetchData();
                 this.isSave = false;
-                alert('Changes saved!'); // Or a more suitable success message
+                alert('Changes saved!');
             } catch (error) {
-                console.error('Error saving changes:', error);
-                // Handle the error appropriately
+                console.error('General error saving changes:', error);
+                alert('A general error occurred while saving changes. Please check the console.');
+                this.isSave = false;
             }
         },
         handleValueChange(newValue) {
             this.categoryId = newValue;
-            if(newValue===0 ) return this.orders = this.allOrders;
+            if (newValue === 0) return this.orders = this.allOrders;
             this.fetchDataById(newValue)
         },
         async fetchData() {
             try {
-                const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/prices');
+                const response = await this.axios.get('http://localhost/api/prices');
                 this.orders = response.data.map((item) => ({ ...item, techDocumentations: JSON.parse(item.techDocumentations) }));
                 this.allOrders = this.orders;
             } catch (error) {
@@ -143,7 +162,7 @@ export default {
         },
         async fetchDataById(categoryId) {
             try {
-                const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/prices/${categoryId}`);
+                const response = await this.axios.get(`http://localhost/api/prices/${categoryId}`);
 
 
                 const prices = response.data[0];
@@ -174,7 +193,7 @@ export default {
         },
         async fetchCategories() {
             try {
-                const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/categories');
+                const response = await this.axios.get('http://localhost/api/categories');
                 this.categories = response.data;
             } catch (error) {
                 console.error('Error fetching categories:', error);
@@ -191,10 +210,10 @@ export default {
                 name: "",
                 nameRu: "",
                 price: "",
-                unit: "",
+                unit: "null",
                 price: null,
                 techDocumentations: [],
-                categoryId: this.categoryId,
+                categoryId: this.categoryId || -1,
             };
         },
 
@@ -212,10 +231,10 @@ export default {
                 name: "",
                 nameRu: "",
                 price: "",
-                unit: "",
+                unit: "null",
                 price: null,
                 techDocumentations: [],
-                categoryId: this.categoryId,
+                categoryId: this.categoryId || -1,
             }
         };
     },
