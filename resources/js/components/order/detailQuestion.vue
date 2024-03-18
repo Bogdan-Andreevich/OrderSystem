@@ -59,7 +59,7 @@ export default {
         },
         async fetchPriceList() {
             try {
-                const response = await this.axios.get(`http://localhost/api/price/rows/${this.selectedUnitId}`);
+                const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/price/rows/${this.selectedUnitId}`);
                 this.priceList = response.data.categories;
 
             } catch (error) {
@@ -78,12 +78,12 @@ export default {
                 } else {
                     this.updateQuestionData(question);
                 }
-                this.handleClearData()
             }
+            this.handleClearData()
         },
 
         createNewQuestionData(payload) {
-            this.axios.post('http://localhost/api/questions', { ...payload, subQuestions: JSON.stringify(payload.subQuestions), answers: JSON.stringify(payload.answers), typeDocId: this.selectedUnitId.toString() })
+            this.axios.post('http://crm-test.san-sanych.in.ua/api/questions', { ...payload, subQuestions: JSON.stringify(payload.subQuestions), answers: JSON.stringify(payload.answers), typeDocId: this.selectedUnitId.toString() })
                 .then(() => {
                     alert("Questions created!")
                 })
@@ -94,7 +94,7 @@ export default {
 
         updateQuestionData(payload) {
             const questionId = payload.id;
-            this.axios.put(`http://localhost/api/questions/${questionId}`, { ...payload, subQuestions: JSON.stringify(payload.subQuestions), answers: JSON.stringify(payload.answers), typeDocId: this.selectedUnitId.toString() })
+            this.axios.put(`http://crm-test.san-sanych.in.ua/api/questions/${questionId}`, { ...payload, subQuestions: JSON.stringify(payload.subQuestions), answers: JSON.stringify(payload.answers), typeDocId: this.selectedUnitId.toString() })
                 .then(() => {
                     alert("Questions updated!")
                 })
@@ -144,7 +144,7 @@ export default {
             if (this.selectedUnitId) { // Check if a unit is selected
                 try {
                     
-                    const response = await this.axios.get(`http://localhost/api/questionsTypeById/${this.selectedUnitId}`);
+                    const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/questionsTypeById/${this.selectedUnitId}`);
                     this.sections = response.data;
                 } catch (error) {
                     console.error("Error fetching questions:", error);
@@ -156,7 +156,7 @@ export default {
         async fetchQuestionCopy() {
             if (this.selectedUnitCopyId) { // Check if a unit is selected
                 try {
-                    const response = await this.axios.get(`http://localhost/api/questionsTypeById/${this.selectedUnitCopyId}`);
+                    const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/questionsTypeById/${this.selectedUnitCopyId}`);
                     this.sectionsCopy = response.data;
                 } catch (error) {
                     console.error("Error fetching questions:", error);
@@ -167,7 +167,7 @@ export default {
         }
     },
     mounted() {
-        this.axios.get("http://localhost/api/typeoforders").then((response) => {
+        this.axios.get("http://crm-test.san-sanych.in.ua/api/typeoforders").then((response) => {
             this.unitTypes = response.data;
         });
 

@@ -49,8 +49,8 @@
                     </td>
                     <td>
                       <select v-model="order.searchId" class="form-control form-control-sm">
-                        <option v-for="search in searches" :key="search.id" :value="search.id">
-                          {{ search.name }}
+                        <option v-for="search in searches" :key="search.ID" :value="search.ID">
+                          {{ search.NAME }}
                         </option>
                       </select>
                     </td>
@@ -82,8 +82,7 @@ export default {
   mounted() {
     this.fetchCategories();
     this.fetchData();
-    // TODO: check it this data
-    // this.fetchSearch();
+    this.fetchSearch();
   },
   methods: {
     handleNavigate(categoryId, id, event) { 
@@ -105,11 +104,11 @@ export default {
         for (const item of this.orders) {
           if (item.id) {
             // Existing item -> Update
-            await this.axios.put(`http://localhost/api/typeoforders/${item.id}`, {...item, techDocumentations: JSON.stringify(item.techDocumentations)});
+            await this.axios.put(`http://crm-test.san-sanych.in.ua/api/typeoforders/${item.id}`, {...item, techDocumentations: JSON.stringify(item.techDocumentations)});
             
           } else {
             // New item -> Create
-            await this.axios.post('http://localhost/api/typeoforders', item);
+            await this.axios.post('http://crm-test.san-sanych.in.ua/api/typeoforders', item);
           }
         }
         this.fetchData();
@@ -127,7 +126,7 @@ export default {
     },
     async fetchData() {
       try {
-        const response = await this.axios.get('http://localhost/api/typeoforders');
+        const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/typeoforders');
         this.allOrders = response.data.map((item) => ({ ...item, techDocumentations: typeof techDocumentations === "JSON" ? JSON.parse(item.techDocumentations) : [] }));;
         if(this.parentCategoryId){
           this.orders = newValue === 0 ? this.allOrders : this.allOrders.filter((item) => +item.categoryId === +this.parentCategoryId)
@@ -140,16 +139,17 @@ export default {
     },
     async fetchCategories() {
       try {
-        const response = await this.axios.get('http://localhost/api/categories');
+        const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/categories');
         this.categories = response.data;
       } catch (error) {
         console.error('Error fetching categories:', error);
       }
     },
     async fetchSearch() {
-      try {
-        const response = await this.axios.get('/bot/api/dict.php?table=ordertype');
-        this.searches = response.data;
+      try { 
+        this.axios
+        const response = await this.axios.get('http://crm-test.san-sanych.in.ua/account/api/order/create');
+        this.searches = response.data.ordertype;
       } catch (error) {
         console.error('Error fetching categories:', error);
       }
@@ -170,7 +170,7 @@ export default {
     },
     handleDelete(id) {
       if (confirm("Are you sure you want to delete this order?")) {
-        this.axios.delete('http://localhost/api/typeoforders/' + id)
+        this.axios.delete('http://crm-test.san-sanych.in.ua/api/typeoforders/' + id)
           .then(response => {
             this.orders = this.orders.filter(order => order.id !== id); // Example
           })

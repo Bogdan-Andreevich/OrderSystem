@@ -773,35 +773,37 @@
 
                             <div class="row pt-3">
 
-                                <div class="col-sm-6 questions">
+                                <div class="col-sm-12 questions">
 
 
                                     <template v-if="order.ordertype_detail_data">
 
-                                        <div class="d-flex justify-content-end question" v-for="item in order.ordertype_detail_data.QUESTIONS" :key="item.QUESTION">
+                                        <!-- <div class="d-flex justify-content-end question" v-for="item in order.ordertype_detail_data.QUESTIONS" :key="item">
 
                                             <div class="p-2 flex-fill">
-                                                {{ item.QUESTION }}
+                                                {{ item.question }}
                                             </div>
 
                                             <div class="p-2 ">
-
-                                                <template v-if="item.ANSWERS.length < 1">
+                                                <template v-if="item.answers.length < 1">
                                                     <input type="text" v-model="item.manager_anser"/>
                                                 </template>
 
                                                 <template v-else>
                                                     <select v-model="item.manager_anser">
-                                                        <option  v-for="answer in item.ANSWERS" >{{ answer }}</option>
+                                                        <option  v-for="answer in item.answers" >{{ answer.title }}</option>
                                                     </select>
 
                                                     <input type="text" v-model="item.manager_anser"  style="margin-left: 10px;"  />
                                                 </template>
-
-
-
                                             </div>
-                                        </div>
+                                        </div> -->
+
+                                        <NestedQuestion 
+                                            v-for="item in order.ordertype_detail_data.QUESTIONS"  
+                                            :key="item.id" 
+                                            :question="item" 
+                                        /> 
 
                                     </template>
 
@@ -813,22 +815,36 @@
                                 </div>
 
 
-                                <div class="col-sm-6">
+                                <div class="col-sm-12">
 
                                     <template v-if="order.ordertype_detail_data">
 
                                         <table class="table table-striped table-bordered">
                                             <thead>
                                             <tr>
+                                                <th scope="col"></th>
+                                                <th scope="col"></th>
                                                 <th scope="col">Назва</th>
+                                                <th scope="col">Ціна</th>
+                                                <th scope="col">Од вим</th>
+                                                <th scope="col">К-ть</th>
                                                 <th scope="col">Вартість</th>
                                             </tr>
                                             </thead>
                                             <tbody>
 
                                                 <tr v-for="item in order.ordertype_detail_data.PRICE">
-                                                    <td>{{ item.NOTE_UA }}</td>
-                                                    <td>{{ (item.price_for_selected_city)? item.price_for_selected_city+' грн.' : '' }}</td>
+                                                    <td>
+                                                        <input type="checkbox" v-model="item.isActive">
+                                                    </td>
+                                                    <td>
+                                                        <p>?</p>
+                                                    </td>
+                                                    <td>{{ item.name }}</td>
+                                                    <td>{{ item.price }}грн.</td>
+                                                    <td>{{ item.unit }}</td>
+                                                    <td>{{ item.count }}</td>
+                                                    <td>{{ item.price }}</td>
                                                 </tr>
 
 
@@ -869,8 +885,12 @@
 
 
 <script>
+import NestedQuestion from './NestedQuestion.vue'
 
     export default {
+        components: {
+        NestedQuestion
+    },
 
         data() {
 
@@ -925,7 +945,10 @@
                     description: null,
 
                     //selected_order_type: null,
-                    ordertype_detail_data: null,  // містить питання і ціни для даного типу замовлення
+                    ordertype_detail_data: {
+                        QUESTIONS: [],
+                        PRICE: [],
+                    },  // містить питання і ціни для даного типу замовлення
 
                     с_calldate: null, // - дата та час дзвінка
                     с_callerid: null, // - номер телефона клієнта з дзвінка
@@ -957,8 +980,8 @@
 
             // http://193.169.189.29/bot/api/dict.php?table=city
             this.axios
-                .get(`/api/order/create`)
-                .then((response) => {
+                .get(`http://crm-test.san-sanych.in.ua/account/api/order/create`)
+                .then(async (response) => {
                     console.log(response.data);
 
                     this.dictionaries.cities = [];
@@ -990,12 +1013,24 @@
                         });
                     });
 
-                    this.dictionaries.order_types = [];
-                    response.data.ordertype.forEach((element) => {
+                    // this.dictionaries.order_types = [];
+                    // response.data.ordertype.forEach((element) => {
 
+                    //     this.dictionaries.order_types.push({
+                    //         'name': element.NAME,
+                    //         'code': element.ID
+                    //     });
+                    // });
+
+
+
+                    const typeOfOrders = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/typeoforders`)
+
+                    typeOfOrders.data.forEach((element) => {
                         this.dictionaries.order_types.push({
-                            'name': element.NAME,
-                            'code': element.ID
+                            'name': element.name,
+                            'code': element.searchId,
+                            'id': element.id
                         });
                     });
 
@@ -1221,7 +1256,7 @@
 
 
                 this.axios
-                    .post('/api/order/store', send_data)
+                    .post('http://crm-test.san-sanych.in.ua/account/api/order/store', send_data)
                     .then(response => {
                         this.errors = {};
 
@@ -1281,62 +1316,74 @@
 
                 if(this.order.selected_order_type == null) return [];
 
-                return this.axios.get(`/api/order/get_ordertype_detail/`+this.order.selected_order_type.code).then((response) => {
+                return this.axios.get(`http://crm-test.san-sanych.in.ua/api/questionsTypeById/${this.order.selected_order_type.id}`).then(async (response) => {
                     //this.ordertype_detail_data = response.data;
-                    this.order.ordertype_detail_data = [];
-
-
-                    if( response.data[0].QUESTIONS != null ){
-
-                        response.data[0].QUESTIONS.forEach((element, index) => {
+                    // this.order.ordertype_detail_data = [];
+                      if( response.data != null ){
+                        response.data.forEach((element, index) => {
                             element.manager_anser = null;
-                            element.ANSWERS = (element.ANSWERS=="")? [] : element.ANSWERS.split(';');
-                            if(element.ANSWERS.length > 0) element.ANSWERS.push('--');
-
-                            response.data[0].QUESTIONS[index] = element;
-
-                            ///this.order.ordertype_detail_data.push(element);
+                            element.answers = element.answers;
+                            this.order.ordertype_detail_data.QUESTIONS.push(element);
                         });
-
-
-                        response.data[0].QUESTIONS.sort(function(a, b) {
-                            return a.PRIORITY - b.PRIORITY;
-                        });
-
                     }
 
 
+                    // if( response.data[0].QUESTIONS != null ){
 
-                    if( response.data[0].PRICE != null){
+                    //     response.data[0].QUESTIONS.forEach((element, index) => {
+                    //         element.manager_anser = null;
+                    //         element.ANSWERS = (element.ANSWERS=="")? [] : element.ANSWERS.split(';');
+                    //         if(element.ANSWERS.length > 0) element.ANSWERS.push('--');
 
-                        response.data[0].PRICE.forEach((element, index) => {
+                    //         response.data[0].QUESTIONS[index] = element;
 
-                            if(this.order.selectedСity != null && element.PRICE_BY_CITY != null) {
-
-                                var searchResults = element.PRICE_BY_CITY.filter(obj => obj.CITY === this.order.selectedСity.code);
-                                element.price_for_selected_city = (searchResults.length >0)? searchResults[0].SUMM : '';
-
-                            }else{
-                                element.price_for_selected_city = '';
-                            }
-
-                            //element.price_for_selected_city =
-                            response.data[0].PRICE[index] = element;
-                        });
+                    //         ///this.order.ordertype_detail_data.push(element);
+                    //     });
 
 
-                        response.data[0].PRICE.sort(function(a, b) {
-                            return b.PRIORITY - a.PRIORITY;
-                        });
+                    //     response.data[0].QUESTIONS.sort(function(a, b) {
+                    //         return a.PRIORITY - b.PRIORITY;
+                    //     });
 
-                    }
+                    // }
+
+                    const priceList = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/price/rows/${this.order.selected_order_type.id}`);
+                    this.order.ordertype_detail_data.PRICE = priceList.data.categories.map((item)=>({...item, count:1, isActive: true}));
+                 
 
 
 
-                    this.order.ordertype_detail_data =  response.data[0];
+                    // if( response.data[0].PRICE != null){
+
+                    //     response.data[0].PRICE.forEach((element, index) => {
+
+                    //         if(this.order.selectedСity != null && element.PRICE_BY_CITY != null) {
+
+                    //             var searchResults = element.PRICE_BY_CITY.filter(obj => obj.CITY === this.order.selectedСity.code);
+                    //             element.price_for_selected_city = (searchResults.length >0)? searchResults[0].SUMM : '';
+
+                    //         }else{
+                    //             element.price_for_selected_city = '';
+                    //         }
+
+                    //         //element.price_for_selected_city =
+                    //         response.data[0].PRICE[index] = element;
+                    //     });
 
 
-                    this.order.description = this.order.ordertype_detail_data.DESCRIPTION;
+                    //     response.data[0].PRICE.sort(function(a, b) {
+                    //         return b.PRIORITY - a.PRIORITY;
+                    //     });
+
+                    // }
+
+
+
+                    // this.order.ordertype_detail_data =  response.data[0];
+
+
+                    // this.order.description = this.order.ordertype_detail_data[0].description;
+                    // this.order.description = this.order.ordertype_detail_data.DESCRIPTION;
 
                 });
 
@@ -1386,7 +1433,7 @@
 
             get_call(){
 
-                this.axios.get(`/api/getcall`).then((response) => {
+                this.axios.get(`http://crm-test.san-sanych.in.ua/account/api/getcall`).then((response) => {
                     console.log(response.data);
 
                     this.call = response.data;
@@ -1405,7 +1452,7 @@
 
 
             get_client(){
-                this.axios.get(`/api/getclient?phone=`+this.call.callerid).then((response) => {
+                this.axios.get(`http://crm-test.san-sanych.in.ua/account/api/getclient?phone=`+this.call.callerid).then((response) => {
                     console.log(response.data);
 
                     this.client = response.data;

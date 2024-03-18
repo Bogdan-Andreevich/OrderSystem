@@ -113,10 +113,10 @@ export default {
                 for (const item of this.orders) {
                     if (item.id) {
                         // Existing item -> Update
-                        await this.axios.put(`http://localhost/api/prices/${item.id}`, item);
+                        await this.axios.put(`http://crm-test.san-sanych.in.ua/api/prices/${item.id}`, item);
                     } else {
                         // New item -> Create
-                        await this.axios.post('http://localhost/api/prices', item);
+                        await this.axios.post('http://crm-test.san-sanych.in.ua/api/prices', item);
                     }
                 }
                 this.fetchData();
@@ -134,7 +134,7 @@ export default {
         },
         async fetchData() {
             try {
-                const response = await this.axios.get('http://localhost/api/prices');
+                const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/prices');
                 this.orders = response.data.map((item) => ({ ...item, techDocumentations: JSON.parse(item.techDocumentations) }));
                 this.allOrders = this.orders;
             } catch (error) {
@@ -143,7 +143,7 @@ export default {
         },
         async fetchDataById(categoryId) {
             try {
-                const response = await this.axios.get(`http://localhost/api/prices/${categoryId}`);
+                const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/prices/${categoryId}`);
 
 
                 const prices = response.data[0];
@@ -174,7 +174,7 @@ export default {
         },
         async fetchCategories() {
             try {
-                const response = await this.axios.get('http://localhost/api/categories');
+                const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/categories');
                 this.categories = response.data;
             } catch (error) {
                 console.error('Error fetching categories:', error);
