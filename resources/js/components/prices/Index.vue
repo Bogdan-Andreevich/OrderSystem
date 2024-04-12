@@ -2,12 +2,14 @@
     <div class="workflow">
         <section class="top-selector">
             <select class="form-control top-select top-select-1" v-model="selectedOption">
-                <option v-for="option in options" :value="option.id">{{ option.name }} -- {{ option.categoryName }}</option>
+                <option v-for="option in options" :value="option.id">{{ option.name }} -- {{ option.categoryName }}
+                </option>
             </select>
 
             <div class="input-group top-selector-section">
                 <select class="form-control p-selector top-select top-select-2" v-model="selectedOptionCopy">
-                    <option v-for="option in options" :value="option.id">{{ option.name }} -- {{ option.categoryName }}</option>
+                    <option v-for="option in options" :value="option.id">{{ option.name }} -- {{ option.categoryName }}
+                    </option>
                 </select>
 
                 <span class="input-group-append">
@@ -49,6 +51,7 @@
                             <td>
                                 <button class="btn btn-danger" @click="deleteAction(index)">Видалити</button>
                             </td>
+                            <td>{{ element.categoryName }}</td>
                         </tr>
                     </template>
                 </draggable>
@@ -120,7 +123,7 @@ export default {
         },
         async copyCategories() {
             try {
-                const response = await this.axios.get(`http://localhost/api/price/rows/${this.selectedOptionCopy}`);
+                const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/price/rows/${this.selectedOptionCopy}`);
                 const copiedCategories = response.data.categories; // Assuming your API returns the categories.
 
                 // Add a check to verify API response:
@@ -139,7 +142,7 @@ export default {
 
                 const isExistCategory = await this.fetchActionsCheck(this.optionId); // Check synchronously
                 const httpMethod = isExistCategory ? 'put' : 'post';
-                const url = isExistCategory ? `http://localhost/api/price/rows/${this.optionId}` : 'http://localhost/api/price/rows';
+                const url = isExistCategory ? `http://crm-test.san-sanych.in.ua/api/price/rows/${this.optionId}` : 'http://crm-test.san-sanych.in.ua/api/price/rows';
 
                 const categories = this.actions.map((item) => item.id);
                 await this.axios[httpMethod](url, {
@@ -160,12 +163,12 @@ export default {
                 const matchingPrice = this.prices.find(price => price.id === id);
                 return matchingPrice; // Or return a modified version 
             });
-            
+
 
             if (this.actions.length === 0) {
                 this.actions.push(...selectedData);
             } else {
-                selectedData.forEach((item)=>{
+                selectedData.forEach((item) => {
                     const isPriceAdded = this.actions.find((itemAction) => itemAction.id === item.id)
                     if (!isPriceAdded) this.actions.push(item);
                 })
@@ -179,7 +182,7 @@ export default {
         },
         async fetchAllPrices() {
             try {
-                const response = await this.axios.get('http://localhost/api/prices');
+                const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/prices');
                 this.prices = response.data;
             } catch (error) {
                 console.error('Error fetching prices:', error);
@@ -187,7 +190,7 @@ export default {
         },
         async fetchDataTypeOfOrders() {
             try {
-                const response = await this.axios.get('http://localhost/api/typeoforders');
+                const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/typeoforders');
                 this.options = response.data.map((item) => ({ ...item, categoryName: this.categories.find((itemCat) => itemCat.id === item.categoryId)?.name, techDocumentations: typeof techDocumentations === "JSON" ? JSON.parse(item.techDocumentations) : [] }));
                 this.optionsCopy = this.options;
 
@@ -197,7 +200,7 @@ export default {
         },
         async fetchDataCategories() {
             try {
-                const response = await this.axios.get('http://localhost/api/categories');
+                const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/categories');
                 this.categories = response.data;
 
             } catch (error) {
@@ -206,25 +209,25 @@ export default {
         },
         async fetchPriceData(priceId) {
             try {
-                const response = await this.axios.get(`http://localhost/api/prices/${priceId}`);
+                const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/prices/${priceId}`);
                 this.prices = response.data[0];
             } catch (error) {
             }
         },
         async fetchActions(priceId) {
             try {
-                const response = await this.axios.get(`http://localhost/api/price/rows/${priceId}`);
+                const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/price/rows/${priceId}`);
                 console.log(response.data, 'HERE');
                 this.actions = response.data.categories.sort((a, b) => {
                     return response.data.categoriesOrders.indexOf(a.id) - response.data.categoriesOrders.indexOf(b.id);
-                });
+                }).map((item) => ({ ...item, categoryName: this.categories.find((category) => category.id === item.categoryId)?.name }))
 
             } catch (error) {
                 this.actions = [];
             }
         },
         async fetchActionsCheck(priceId) {
-            const response = await this.axios.get(`http://localhost/api/price/rows/${priceId}`);
+            const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/price/rows/${priceId}`);
             return response.data.categories;
         }
     }

@@ -4,7 +4,7 @@
       <li class="nav-item maincat" @click="emitValue(0); setActiveMainCategory();" :class="{ active: isMainCategory }">Всі </li>
       <li class="nav-item">Категорії:</li>
       </ul>
-    <ul class="navbar-nav">
+    <ul class="navbar-nav navbar-overflow">
       <li class="nav-item" v-for="category in categories" :key="category.id"
         @click="emitValue(category.id); setActive(category); markForRemoval(category)"
         :class="{ 'to-remove': isRemove && category.marked, 'active': activeCategory === category.id }">
@@ -70,7 +70,7 @@ export default {
       }
     },
     deleteCategory(id) {
-      this.axios.delete(`http://localhost/api/categories/${id}`)
+      this.axios.delete(`http://crm-test.san-sanych.in.ua/api/categories/${id}`)
         .then(() => {
           // Remove from categories array
           this.categories = this.categories.filter(category => category.id !== id);
@@ -81,7 +81,7 @@ export default {
         });
     },
     addCategory() {
-      this.axios.post('http://localhost/api/categories', {
+      this.axios.post('http://crm-test.san-sanych.in.ua/api/categories', {
         name: this.categoryName,
         text: this.categoryName
       })
@@ -100,7 +100,7 @@ export default {
     },
     async fetchCategories() {
       try {
-        const response = await this.axios.get('http://localhost/api/categories');
+        const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/categories');
         this.categories = response.data;
         // this.emitValue('valueChanged', response.data[0].id);
         // this.setActive(response.data[0])
@@ -204,4 +204,11 @@ export default {
 .control-button:last-child {
   color: red;
 }
+
+.navbar-overflow{
+width: 100%;
+overflow-x: auto;
+margin-right: 40px;
+}
+
 </style>

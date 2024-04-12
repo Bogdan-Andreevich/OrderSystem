@@ -117,7 +117,7 @@ export default {
                     if (item.id) {
                         // Existing item -> Update
                         try {
-                            await this.axios.put(`http://localhost/api/prices/${item.id}`, item);
+                            await this.axios.put(`http://crm-test.san-sanych.in.ua/api/prices/${item.id}`, item);
                         } catch (error) {
                             console.error(`Error updating item ${item.name}!`);
                             alert(`Error updating item ${item.name}!`);
@@ -127,7 +127,7 @@ export default {
                     } else {
                         // New item -> Create
                         try {
-                            await this.axios.post('http://localhost/api/prices', item);
+                            await this.axios.post('http://crm-test.san-sanych.in.ua/api/prices', item);
                         } catch (error) {
                             console.error(`Error creating item:`, item);
                             alert('Error creating item: ' + item);
@@ -148,21 +148,55 @@ export default {
         },
         handleValueChange(newValue) {
             this.categoryId = newValue;
-            if (newValue === 0) return this.orders = this.allOrders;
+            if (newValue === 0) { 
+                this.fetchDataAllCat()
+                return this.orders = this.allOrders
+            };
             this.fetchDataById(newValue)
         },
         async fetchData() {
             try {
-                const response = await this.axios.get('http://localhost/api/prices');
+                const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/prices');
                 this.orders = response.data.map((item) => ({ ...item, techDocumentations: JSON.parse(item.techDocumentations) }));
                 this.allOrders = this.orders;
             } catch (error) {
                 console.error('Error fetching prices:', error);
             }
         },
+        async fetchDataAllCat() {
+            try {
+                const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/pricesAll`);
+
+
+                const prices = response.data[0];
+                const priceRows = response.data[1];
+
+                priceRows.forEach(row => {
+                    row.categories = JSON.parse(row.categories);
+                });
+
+                // Remove duplicates based on priceId and categories
+                const uniquePriceRows = priceRows.filter((row, index, self) =>
+                    index === self.findIndex(r =>
+                        r.priceId === row.priceId && JSON.stringify(r.categories) === JSON.stringify(row.categories)
+                    )
+                );
+
+                prices.forEach(price => {
+                    price.techDocumentations = uniquePriceRows.filter(row => row.categories.includes(price.id));
+                });
+
+                this.orders = prices
+                this.allTz = priceRows
+
+
+            } catch (error) {
+                console.error('Error fetching prices:', error);
+            }
+        },
         async fetchDataById(categoryId) {
             try {
-                const response = await this.axios.get(`http://localhost/api/prices/${categoryId}`);
+                const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/prices/${categoryId}`);
 
 
                 const prices = response.data[0];
@@ -193,7 +227,7 @@ export default {
         },
         async fetchCategories() {
             try {
-                const response = await this.axios.get('http://localhost/api/categories');
+                const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/categories');
                 this.categories = response.data;
             } catch (error) {
                 console.error('Error fetching categories:', error);

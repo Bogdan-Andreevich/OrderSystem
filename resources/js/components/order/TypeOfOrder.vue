@@ -110,9 +110,9 @@ export default {
     try {
         const updatePromises = this.orders.map((item) => {
             if (item.id) {
-                return this.axios.put(`http://localhost/api/typeoforders/${item.id}`, { ...item, techDocumentations: JSON.stringify(item.techDocumentations) });
+                return this.axios.put(`http://crm-test.san-sanych.in.ua/api/typeoforders/${item.id}`, { ...item, techDocumentations: JSON.stringify(item.techDocumentations) });
             } else {
-                return this.axios.post('http://localhost/api/typeoforders', item);
+                return this.axios.post('http://crm-test.san-sanych.in.ua/api/typeoforders', item);
             }
         });
 
@@ -141,7 +141,7 @@ export default {
     },
     async fetchData() {
       try {
-        const response = await this.axios.get('http://localhost/api/typeoforders');
+        const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/typeoforders');
         this.allOrders = response.data.map((item) => ({ ...item, techDocumentations: typeof techDocumentations === "JSON" ? JSON.parse(item.techDocumentations) : [] }));;
         if (this.parentCategoryId) {
           this.orders = newValue === 0 ? this.allOrders : this.allOrders.filter((item) => +item.categoryId === +this.parentCategoryId)
@@ -154,7 +154,7 @@ export default {
     },
     async fetchCategories() {
       try {
-        const response = await this.axios.get('http://localhost/api/categories');
+        const response = await this.axios.get('http://crm-test.san-sanych.in.ua/api/categories');
         this.categories = response.data;
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -163,7 +163,7 @@ export default {
     async fetchSearch() {
       try {
         this.axios
-        const response = await this.axios.get('http://localhost/account/api/order/create');
+        const response = await this.axios.get('http://crm-test.san-sanych.in.ua/account/api/order/create');
         this.searches = response.data.ordertype;
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -185,7 +185,7 @@ export default {
     },
     handleDelete(id) {
       if (confirm("Are you sure you want to delete this order?")) {
-        this.axios.delete('http://localhost/api/typeoforders/' + id)
+        this.axios.delete('http://crm-test.san-sanych.in.ua/api/typeoforders/' + id)
           .then(response => {
             this.orders = this.orders.filter(order => order.id !== id); // Example
           })

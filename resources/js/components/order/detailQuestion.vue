@@ -67,7 +67,7 @@ export default {
         },
         async fetchPriceList() {
             try {
-                const response = await this.axios.get(`http://localhost/api/price/rows/${this.selectedUnitId}`);
+                const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/price/rows/${this.selectedUnitId}`);
                 this.priceList = response.data.categories;
 
             } catch (error) {
@@ -87,7 +87,7 @@ export default {
                 this.handleCopyAnswer(item.subQuestions)
             }
 
-            return { ...item, answers }
+            return { ...item, isNew: true, answers }
         },
         saveData() {
             let i = 0;
@@ -100,14 +100,15 @@ export default {
                     this.updateQuestionData(question);
                 }
             }
+            alert("Complete!")
             this.handleClearData()
         },
 
         createNewQuestionData(payload) {
-            this.axios.post('http://localhost/api/questions', { ...payload, subQuestions: JSON.stringify(payload.subQuestions), answers: JSON.stringify(payload.answers), typeDocId: this.selectedUnitId.toString() })
-                .then(() => {
-                    alert("Questions created!")
-                })
+            this.axios.post('http://crm-test.san-sanych.in.ua/api/questions', { ...payload, subQuestions: JSON.stringify(payload.subQuestions), answers: JSON.stringify(payload.answers), typeDocId: this.selectedUnitId.toString() })
+                // .then(() => {
+                //     alert("Questions created!")
+                // })
                 .catch((e) => {
                     console.log("ERROR: ", e);
                 });
@@ -115,16 +116,22 @@ export default {
 
         updateQuestionData(payload) {
             const questionId = payload.id;
-            this.axios.put(`http://localhost/api/questions/${questionId}`, { ...payload, subQuestions: JSON.stringify(payload.subQuestions), answers: JSON.stringify(payload.answers), typeDocId: this.selectedUnitId.toString() })
-                .then(() => {
-                    alert("Questions updated!")
-                })
+            this.axios.put(`http://crm-test.san-sanych.in.ua/api/questions/${questionId}`, { ...payload, subQuestions: JSON.stringify(payload.subQuestions), answers: JSON.stringify(payload.answers), typeDocId: this.selectedUnitId.toString() })
+                // .then(() => {
+                //     alert("Questions updated!")
+                // })
                 .catch(() => {
                     console.log("ERROR: ", e);
                 });
         },
 
         handleDeleteQuestion(targetId) {
+            if (!confirm("Ви точно хочете видалити питання?(Всі субпитання також будуть видалені)")) {
+                return;  // Abort deletion process if user cancels
+            }
+
+            this.removeQuestion(targetId);
+
             let newSections = JSON.parse(JSON.stringify(this.sections)); // True Deep Copy
 
             const recursiveDelete = (questions) => {
@@ -151,7 +158,7 @@ export default {
                 {
                     question: '', // Initialize with empty values
                     question_description: '',
-                    is_add_description: false,
+                    is_add_description: true,
                     selectedOption: '',
                     answers: [],
                     subQuestions: [],
@@ -164,7 +171,7 @@ export default {
             if (this.selectedUnitId) { // Check if a unit is selected
                 try {
 
-                    const response = await this.axios.get(`http://localhost/api/questionsTypeById/${this.selectedUnitId}`);
+                    const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/questionsTypeById/${this.selectedUnitId}`);
                     this.sections = response.data.sort((a,b)=>a.index - b.index).map((item)=>({...item, index:0}));
                 } catch (error) {
                     console.error("Error fetching questions:", error);
@@ -173,10 +180,19 @@ export default {
                 this.questions = []; // Clear questions, for example
             }
         },
+        async removeQuestion(id) {
+                try {
+                await this.axios.delete(`http://crm-test.san-sanych.in.ua/api/questions/${id}`);
+                 
+                } catch (error) {
+                    console.error("Error fetching questions:", error);
+                }
+        
+        },
         async fetchQuestionCopy() {
             if (this.selectedUnitCopyId) { // Check if a unit is selected
                 try {
-                    const response = await this.axios.get(`http://localhost/api/questionsTypeById/${this.selectedUnitCopyId}`);
+                    const response = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/questionsTypeById/${this.selectedUnitCopyId}`);
                     this.sectionsCopy = response.data;
                 } catch (error) {
                     console.error("Error fetching questions:", error);
@@ -187,7 +203,7 @@ export default {
         }
     },
     mounted() {
-        this.axios.get("http://localhost/api/typeoforders").then((response) => {
+        this.axios.get("http://crm-test.san-sanych.in.ua/api/typeoforders").then((response) => {
             this.unitTypes = response.data;
         });
 

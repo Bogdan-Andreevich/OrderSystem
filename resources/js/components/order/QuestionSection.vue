@@ -1,8 +1,10 @@
 <template>
-    <div :style="{ paddingLeft: sectionData.index * 20 + 'px' }" class="que-template">
+    <div :style="{ marginTop: '10px', paddingLeft: sectionData.index * 20 + 'px' }" class="que-template">
         <button class="btn btn-info btn-sm" @click="toggleVisibility(sectionData)">+</button>
         <span style="margin-left: 20px;"> {{ sectionData.question }}</span>
-        <div v-if="sectionData.isVisible">
+      
+        <!-- <div v-if="sectionData.isVisible !== undefined "> -->
+        <div v-if="this.isVisible">
             <button class="btn btn-danger btn-sm" @click="$emit('deleteQuestion', sectionData.id)">X</button><br />
             <label for="input-1" class="form-label">Питання:</label>
             <input type="text" id="input-1" class="form-control" v-model="sectionData.question">
@@ -42,31 +44,54 @@
 
                 <label for="selector" class="form-label">Додати до ціни:</label>
                 <select id="selector" class="form-select" v-model="answer.addToPrice">
+                    <option :key="0" :value="null">
+                        
+                    </option>
                     <option v-for="(price, priceIndex) in priceList" :key="priceIndex" :value="price.name">
                         {{ price.name }} - {{ price.price }}
                     </option>
                 </select>
             </div>
-            <div v-if="sectionData.subQuestions.length > 0">
-            <draggable :list="sectionData.subQuestions" group="actions" @start="dragStart" @end="dragEnd" item-key="index">
-                <template #item="{ element, index }">
-                    <div> 
-                        <question-section 
-                            :priceList="priceList" 
-                            :answers="sectionData.answers" 
-                            :sectionData="element"  
-                            :index="sectionData.index" 
-                            @deleteQuestion="handleDeleteSubQuestion(index, element.id)"
-                            @add-sub-question="addSubQuestion"
-                        >   
-                        </question-section>
-                    </div>
-                </template>
-            </draggable>
-</div>
+            <!-- <div v-if="sectionData.subQuestions.length > 0">
+                <draggable :list="sectionData.subQuestions" group="actions" @start="dragStart" @end="dragEnd" item-key="index">
+                    <template #item="{ element, index }">
+                        <div> 
+                            <question-section 
+                                :priceList="priceList" 
+                                :answers="sectionData.answers" 
+                                :sectionData="element"  
+                                :index="sectionData.index" 
+                                @deleteQuestion="handleDeleteSubQuestion(index, element.id)"
+                                @add-sub-question="addSubQuestion"
+                            >   
+                            </question-section>
+                        </div>
+                    </template>
+                </draggable>
+            </div> -->
 
 
         </div>
+
+        <div v-if="sectionData.subQuestions.length > 0">
+                <draggable :list="sectionData.subQuestions" group="actions" @start="dragStart" @end="dragEnd" item-key="index">
+                    <template #item="{ element, index }">
+                        <div> 
+                            <question-section 
+                                :priceList="priceList" 
+                                :answers="sectionData.answers" 
+                                :sectionData="element"  
+                                :index="sectionData.index" 
+                                @deleteQuestion="handleDeleteSubQuestion(index, element.id)"
+                                @add-sub-question="addSubQuestion"
+                            >   
+                            </question-section>
+                        </div>
+                    </template>
+                </draggable>
+            </div>
+
+
     </div>
 </template>
 
@@ -75,17 +100,18 @@ import draggable from 'vuedraggable'
 
 export default {
     name: "QuestionSection",
+    data() {
+        return {
+            isVisible: false,
+        };
+    },
     components: {
         draggable,
     },
     props: ['sectionData', 'index', 'priceList', 'answers'],
     methods: {
         toggleVisibility(sectionData) {
-            if (typeof sectionData.isVisible === 'undefined') {
-                sectionData.isVisible = true; // This will be reactive in Vue 3
-            } else {
-                sectionData.isVisible = !sectionData.isVisible;
-            }
+                this.isVisible = !this.isVisible;
         },
         addSubQuestion(parentQuestion) {
             const newSubQuestion = {
@@ -111,6 +137,10 @@ export default {
             this.sectionData.answers.splice(answerIndex, 1);
         },
         handleDeleteSubQuestion(sectionIndex, questionId) {
+            if (!confirm(`Ви точно хочете видалити питання?${this.sectionData.subQuestions[0].subQuestions.length>0 ? '(Всі субпитання також будуть видалені)' : ''}`)) {
+                return;  // Abort deletion process if user cancels
+            }
+
             const section = this.sectionData;
             if (section) {
                 const subQuestionIndex = section.subQuestions.findIndex(subQ => +subQ.id === +questionId);

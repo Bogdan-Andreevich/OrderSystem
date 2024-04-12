@@ -47,6 +47,23 @@
     }
 
 
+/* Tooltip container */
+.question-tooltip {
+  display: none;        /* Initially hidden */
+  position: absolute;   /* Positioned relative to the parent <td> */
+  top: -50px;           /* Adjust the tooltip position */
+  left: 50%;            /* Center the tooltip horizontally */  
+  transform: translateX(-50%); 
+  background-color: #f0f0f0;
+  padding: 5px 10px;
+  border-radius: 5px;       
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); 
+}
+
+/* Show tooltip on hover of the question mark */
+.questionmark:hover + .question-tooltip { 
+  display: block;  
+}
 
 
 
@@ -87,10 +104,7 @@
                 <!-- form start -->
                 <form class="form-horizontal">
                     <div class="card-body">
-
-                        <div    class="container-fluid">
-
-
+                        <div class="container-fluid">
                             <!-- call data div -->
                             <div class="row">
                                 <div class="d-flex align-items-center m-3" style="width: 100%;">
@@ -121,10 +135,8 @@
 
 
                             <div class="row">
-
                                 <!-- left column -->
                                 <div class="col-md-5 border rounded-lg">
-
                                     <div class="row justify-content-end p-3">
                                         <div class="col-md-auto">
                                             <Button label="Оновити" @click="get_client" />
@@ -773,7 +785,7 @@
 
                             <div class="row pt-3">
 
-                                <div class="col-sm-12 questions">
+                                <div class="col-sm-6 questions">
 
 
                                     <template v-if="order.ordertype_detail_data">
@@ -801,6 +813,7 @@
 
                                         <NestedQuestion 
                                             v-for="item in order.ordertype_detail_data.QUESTIONS"  
+                                            @priceChange="handlePriceChange"
                                             :key="item.id" 
                                             :question="item" 
                                         /> 
@@ -815,7 +828,7 @@
                                 </div>
 
 
-                                <div class="col-sm-12">
+                                <div class="col-sm-6">
 
                                     <template v-if="order.ordertype_detail_data">
 
@@ -832,23 +845,39 @@
                                             </tr>
                                             </thead>
                                             <tbody>
+                                                <tr>
+                                                    <td>Вартість: </td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td>{{ pricesAmount }}</td>
+                                                </tr>
 
                                                 <tr v-for="item in order.ordertype_detail_data.PRICE">
                                                     <td>
-                                                        <input type="checkbox" v-model="item.isActive">
+                                                        <input style="width:100%; height:40px;" change="recalculatePricesAmount" type="checkbox" v-model="item.isActive" >
                                                     </td>
-                                                    <td>
-                                                        <p>?</p>
-                                                    </td>
+                                                    <td style="position:relative;">
+    <p class="questionmark">?</p> 
+                                                        <div class="question-tooltip" v-if="item.isActive && item.questionTitle"> 
+                                                            {{ item.questionTitle }} 
+                                                        </div>                                    
+</td>
                                                     <td>{{ item.name }}</td>
                                                     <td>{{ item.price }}грн.</td>
                                                     <td>{{ item.unit }}</td>
-                                                    <td>{{ item.count }}</td>
+                                                    <td class="p-2"> 
+                                                        <button type="button" class="btn btn-sm btn-danger" @click="decreaseQuantity(item)">-</button> 
+                                                        <input type="number" @blur="recalculatePricesAmount" v-model.number="item.count" min="1" class="form-control form-control-sm"> 
+                                                        <button type="button" class="btn btn-sm btn-success" @click="increaseQuantity(item)">+</button> 
+                                                    </td>
                                                     <td>{{ item.price }}</td>
                                                 </tr>
 
 
-
+                                             
                                             </tbody>
 
                                         </table>
@@ -910,15 +939,15 @@ import NestedQuestion from './NestedQuestion.vue'
                 selected_reasons_for_refusal: null,
                 date_of_next_contact: null,
                 */
-
-
+                pricesAmount: 0,
+                questionAndAnswer: [],
                 dictionaries:{
                     cities:[],
                     streets:[],
                     reasons_for_refusal:[],
                     order_types: [],
                 },
-
+                orderComment: [],
 
                 order: {
                     name: null,
@@ -980,7 +1009,7 @@ import NestedQuestion from './NestedQuestion.vue'
 
             // http://193.169.189.29/bot/api/dict.php?table=city
             this.axios
-                .get(`http://localhost/account/api/order/create`)
+                .get(`http://crm-test.san-sanych.in.ua/account/api/order/create`)
                 .then(async (response) => {
                     console.log(response.data);
 
@@ -1024,7 +1053,7 @@ import NestedQuestion from './NestedQuestion.vue'
 
 
 
-                    const typeOfOrders = await this.axios.get(`http://localhost/api/typeoforders`)
+                    const typeOfOrders = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/typeoforders`)
 
                     typeOfOrders.data.forEach((element) => {
                         this.dictionaries.order_types.push({
@@ -1071,8 +1100,53 @@ import NestedQuestion from './NestedQuestion.vue'
 
 
         methods:{
+            handlePriceChange(answerTitle, questionTitle, {question_description, is_add_description}, customAnswer) {
+                if(is_add_description){
+                    this.orderComment = this.questionAndAnswer.filter((item)=>item.question!==questionTitle)
+                    
+                    this.orderComment.push({
+                        question: questionTitle,
+                        anser: answerTitle,
+                        questionDesciption: customAnswer ? customAnswer : question_description
+                    })
 
+                }
 
+                this.questionAndAnswer = this.questionAndAnswer.filter((item)=>item.question!==questionTitle)
+
+                this.questionAndAnswer.push({
+                    question: questionTitle,
+                    anser: answerTitle 
+                })
+
+                this.order.ordertype_detail_data.PRICE = this.order.ordertype_detail_data.PRICE.map(item => {
+                    return {
+                        ...item,
+                        isActive: item.isActive || item.name === answerTitle,
+                        questionTitle: item?.questionTitle ? item.questionTitle : item.name === answerTitle ? questionTitle : null
+                    }
+                });
+                this.recalculatePricesAmount()
+            },
+            increaseQuantity(item) {
+                item.count++;
+                this.recalculatePricesAmount();
+            },
+            decreaseQuantity(item) {
+                if (item.count > 1) {
+                    item.count--;
+                    this.recalculatePricesAmount();
+                }
+            },
+            recalculatePricesAmount() {
+                let total = 0;
+                this.order.ordertype_detail_data.PRICE.forEach(item => {
+                    if (item.isActive) {
+                        total += item.price * item.count;
+                    }
+                });
+                this.pricesAmount = total;
+            },
             status_change(i){
                 //alert('status change '+i);
 
@@ -1210,9 +1284,8 @@ import NestedQuestion from './NestedQuestion.vue'
                     status:  this.order.status,
                     ordertype: this.order.selected_order_type?.code || '',
                     name: this.order.name,
-                    comment: this.order.comment,
-                    comment_inner: this.order.internal_comment,
-
+                    comment: this.order.comment + JSON.stringify(this.orderComment),
+                    comment_inner: this.orderComment.map((item)=>item.question_description)?.join(";"),
                     phone1: String(this.order.phone1).replace(/\D/g, ""),
                     phone2: String(this.order.phone2).replace(/\D/g, ""),
                     phone3: String(this.order.phone3).replace(/\D/g, ""),
@@ -1230,7 +1303,7 @@ import NestedQuestion from './NestedQuestion.vue'
 
                     date: this.converDate(this.order.date),
                     time: this.order.time,
-                    questions_and_answers: this.get_questions_and_answers(),
+                    questions_and_answers: this.questionAndAnswer,
 
 
                     с_calldate: this.order.с_calldate,       //- дата та час дзвінка
@@ -1256,7 +1329,7 @@ import NestedQuestion from './NestedQuestion.vue'
 
 
                 this.axios
-                    .post('http://localhost/account/api/order/store', send_data)
+                    .post('http://crm-test.san-sanych.in.ua/account/api/order/store', send_data)
                     .then(response => {
                         this.errors = {};
 
@@ -1315,8 +1388,8 @@ import NestedQuestion from './NestedQuestion.vue'
                 console.log(this.order.selectedСity); //це стрічка необхідна для того щоб при зміні this.selectedСity відбувався перерахунок ordertype_detail()
 
                 if(this.order.selected_order_type == null) return [];
-
-                return this.axios.get(`http://localhost/api/questionsTypeById/${this.order.selected_order_type.id}`).then(async (response) => {
+                this.order.ordertype_detail_data.QUESTIONS=[]
+                return this.axios.get(`http://crm-test.san-sanych.in.ua/api/questionsTypeById/${this.order.selected_order_type.id}`).then(async (response) => {
                     //this.ordertype_detail_data = response.data;
                     // this.order.ordertype_detail_data = [];
                       if( response.data != null ){
@@ -1347,9 +1420,17 @@ import NestedQuestion from './NestedQuestion.vue'
 
                     // }
 
-                    const priceList = await this.axios.get(`http://localhost/api/price/rows/${this.order.selected_order_type.id}`);
-                    this.order.ordertype_detail_data.PRICE = priceList.data.categories.map((item)=>({...item, count:1, isActive: true}));
-                 
+                    const priceList = await this.axios.get(`http://crm-test.san-sanych.in.ua/api/price/rows/${this.order.selected_order_type.id}`);
+
+                    const priceSorting = priceList.data.categories.sort((a, b) => {
+                    return priceList.data.categoriesOrders.indexOf(a.id) - priceList.data.categoriesOrders.indexOf(b.id);
+                });
+
+
+
+
+                    this.order.ordertype_detail_data.PRICE = priceSorting.map((item)=>({...item, count:1, isActive: false}));
+                        
 
 
 
@@ -1433,7 +1514,7 @@ import NestedQuestion from './NestedQuestion.vue'
 
             get_call(){
 
-                this.axios.get(`http://localhost/account/api/getcall`).then((response) => {
+                this.axios.get(`http://crm-test.san-sanych.in.ua/account/api/getcall`).then((response) => {
                     console.log(response.data);
 
                     this.call = response.data;
@@ -1452,7 +1533,7 @@ import NestedQuestion from './NestedQuestion.vue'
 
 
             get_client(){
-                this.axios.get(`http://localhost/account/api/getclient?phone=`+this.call.callerid).then((response) => {
+                this.axios.get(`http://crm-test.san-sanych.in.ua/account/api/getclient?phone=`+this.call.callerid).then((response) => {
                     console.log(response.data);
 
                     this.client = response.data;

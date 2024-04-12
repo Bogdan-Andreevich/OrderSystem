@@ -90,6 +90,22 @@ class PriceController extends Controller
         return [$prices, $pricesRows];
     }
 
+    public function findByCategoryAll()
+    {
+        $prices = Price::all();
+        $pricesRows = PriceRows::all();
+
+        foreach ($pricesRows as &$question) {
+            $question->categories = json_encode($question->categories);
+        }
+
+        foreach ($prices as &$question) {
+            $question->techDocumentations = PriceRows::where('categories->id', $question->id)->get();
+        }
+
+        return [$prices, $pricesRows];
+    }
+
 
 
     public function destroy($id)
